@@ -23,9 +23,13 @@ public class UserService {
     private AuthenticationManager authenticationManager;
     private JwtUtils jwtUtils;
 
-    public User registerUser(User user){
+    public JwtAuthenticationResponse registerUser(User user){
         user.setPassword(passwordEncoder.encode(user.getPassword()));
-        return userRepository.save(user);
+        User savedUser = userRepository.save(user);
+
+        UserDetailsImpl userDetails = UserDetailsImpl.build(savedUser);
+        String jwt = jwtUtils.generateToken(userDetails);
+        return new JwtAuthenticationResponse(jwt);
     }
 
     public JwtAuthenticationResponse authenticateUser(LoginRequest loginRequest){

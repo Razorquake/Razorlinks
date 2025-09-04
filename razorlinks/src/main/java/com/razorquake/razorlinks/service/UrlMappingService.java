@@ -37,12 +37,12 @@ public class UrlMappingService {
 
     private UrlMappingDTO convertToDto(UrlMapping urlMapping) {
         UrlMappingDTO urlMappingDTO = new UrlMappingDTO();
-        urlMappingDTO.setShortUrl(urlMapping.getShortUrl());
-        urlMappingDTO.setOriginalUrl(urlMapping.getOriginalUrl());
         urlMappingDTO.setId(urlMapping.getId());
+        urlMappingDTO.setOriginalUrl(urlMapping.getOriginalUrl());
+        urlMappingDTO.setShortUrl(urlMapping.getShortUrl());
         urlMappingDTO.setUsername(urlMapping.getUser().getUsername());
         urlMappingDTO.setCreateDate(urlMapping.getCreatedDate());
-        urlMappingDTO.setClickCount(urlMappingDTO.getClickCount());
+        urlMappingDTO.setClickCount(urlMapping.getClickCount());
         return urlMappingDTO;
     }
 

@@ -24,8 +24,7 @@ public class AuthController {
         user.setEmail(registerRequest.getEmail());
         user.setPassword(registerRequest.getPassword());
         user.setRole("ROLE_USER");
-        userService.registerUser(user);
-        return ResponseEntity.ok("User registered successfully");
+        return ResponseEntity.ok(userService.registerUser(user));
     }
 
     @PostMapping("/public/login")
