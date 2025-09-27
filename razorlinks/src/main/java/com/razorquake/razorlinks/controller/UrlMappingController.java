@@ -20,14 +20,16 @@ import java.util.Map;
 @RestController
 @RequestMapping("/api/urls")
 @AllArgsConstructor
+@PreAuthorize("hasAnyRole('ADMIN', 'USER')")
 public class UrlMappingController {
 
     private UrlMappingService urlMappingService;
     private UserService userService;
 
     @PostMapping("/shorten")
-    @PreAuthorize("hasRole('USER')")
-    public ResponseEntity<UrlMappingDTO> createShortUrl(@RequestBody Map<String, String> request, Principal principal){
+    public ResponseEntity<UrlMappingDTO> createShortUrl(
+            @RequestBody Map<String, String> request, Principal principal
+    ){
         String originalUrl = request.get("originalUrl");
         User user = userService.findByUsername(principal.getName());
         UrlMappingDTO urlMappingDTO = urlMappingService.createShortUrl(originalUrl, user);
@@ -35,18 +37,19 @@ public class UrlMappingController {
     }
 
     @GetMapping("/myurls")
-    @PreAuthorize("hasRole('USER')")
-    public ResponseEntity<List<UrlMappingDTO>> createShortUrl(Principal principal){
+    public ResponseEntity<List<UrlMappingDTO>> createShortUrl(
+            Principal principal
+    ){
         User user = userService.findByUsername(principal.getName());
         return ResponseEntity.ok(urlMappingService.getUrlsByUser(user));
     }
 
     @GetMapping("/analytics/{shortUrl}")
-    @PreAuthorize("hasRole('USER')")
     public ResponseEntity<List<ClickEventDTO>> getUrlAnalytics(
             @PathVariable String shortUrl,
             @RequestParam String startDate,
-            @RequestParam String endDate){
+            @RequestParam String endDate
+    ){
         DateTimeFormatter formatter = DateTimeFormatter.ISO_LOCAL_DATE_TIME;
         LocalDateTime start = LocalDateTime.parse(startDate, formatter);
         LocalDateTime end = LocalDateTime.parse(endDate, formatter);
@@ -55,7 +58,6 @@ public class UrlMappingController {
     }
 
     @GetMapping("/totalClicks")
-    @PreAuthorize("hasRole('USER')")
     public ResponseEntity<Map<LocalDate, Long>> getTotalClicksByDate(
             Principal principal,
             @RequestParam String startDate,
@@ -69,5 +71,13 @@ public class UrlMappingController {
         return ResponseEntity.ok(totalClicks);
     }
 
+    @DeleteMapping("/{shortUrl}")
+    public ResponseEntity<?> deleteUrlMapping(
+            @PathVariable String shortUrl, Principal principal
+    ){
+        User user = userService.findByUsername(principal.getName());
+        urlMappingService.deleteUrlMapping(shortUrl, user);
+        return ResponseEntity.ok().build();
+    }
 
 }

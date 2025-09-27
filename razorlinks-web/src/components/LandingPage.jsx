@@ -2,7 +2,7 @@ import React, {useContext} from 'react';
 import Card from "./Card.jsx";
 import { motion } from "framer-motion";
 import {useNavigate} from "react-router-dom";
-import {useStoreContext} from "../contextApi/ContextApi.jsx";
+import {useStoreContext} from "../store/ContextApi.jsx";
 
 
 const LandingPage = () => {

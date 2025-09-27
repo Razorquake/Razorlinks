@@ -1,15 +1,15 @@
 import {useState} from "react";
 import {useForm} from "react-hook-form";
 import TextField from "./TextField.jsx";
-import {Link, useNavigate} from "react-router-dom";
-import api from "../api/api.js";
+import {Link } from "react-router-dom";
+import api from "../services/api.js";
 import toast from "react-hot-toast";
-import {useStoreContext} from "../contextApi/ContextApi.jsx";
 
 const RegisterPage = () => {
-    const navigate = useNavigate();
+    const [registrationComplete, setRegistrationComplete] = useState(false);
     const [loader, setLoader] = useState(false);
-    const {setToken} = useStoreContext();
+    const [userEmail, setUserEmail] = useState("");
+    const [resendingEmail, setResendingEmail] = useState(false);
 
     const {
         register,
@@ -29,21 +29,97 @@ const RegisterPage = () => {
         setLoader(true);
         try {
             const { data: response} = await api.post(
-                "/api/auth/public/register",
+                "/auth/public/register",
                 data
             );
-            setToken(response.token);
-            localStorage.setItem("JWT_TOKEN", JSON.stringify(response.token));
+            // Show success message
+            toast.success(response.message);
+            // Store email for resend functionality
+            setUserEmail(data.email);
+            // Show verification message
+            setRegistrationComplete(true);
+
             reset();
-            navigate("/dashboard");
-            toast.success("Register successfully.");
         } catch (error){
             console.log(error);
-            toast.error(error.message);
+            if (error.response?.data?.message) {
+                toast.error(error.response.data.message);
+            } else {
+                toast.error("Registration failed. Please try again.");
+            }
         } finally {
             setLoader(false);
         }
     };
+
+    const resendVerificationEmail = async () => {
+        setResendingEmail(true);
+        try {
+            const { data: response } = await api.post(
+                "/auth/public/resend-verification",
+                { email: userEmail }
+            );
+            toast.success(response.message);
+        } catch (error) {
+            console.log(error);
+            if (error.response?.data?.message) {
+                toast.error(error.response.data.message);
+            } else {
+                toast.error("Failed to resend verification email. Please try again.");
+            }
+        } finally {
+            setResendingEmail(false);
+        }
+    };
+
+    if (registrationComplete) {
+        return (
+            <div className="min-h-[calc(100vh-64px)] flex justify-center items-center">
+                <div className="sm:w-[500px] w-[360px] shadow-custom py-8 sm:px-8 px-4 rounded-md text-center">
+                    <div className="mb-6">
+                        <div className="w-20 h-20 mx-auto mb-4 bg-green-100 rounded-full flex items-center justify-center">
+                            <svg className="w-10 h-10 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M3 8l7.89 4.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"></path>
+                            </svg>
+                        </div>
+                        <h1 className="text-2xl font-bold text-gray-800 mb-2">Check Your Email</h1>
+                        <p className="text-gray-600 mb-4">
+                            We've sent a verification email to:
+                        </p>
+                        <p className="font-semibold text-gray-800 mb-4">{userEmail}</p>
+                        <p className="text-sm text-gray-500 mb-6">
+                            Please click the verification link in your email to activate your account.
+                            The link will expire in 24 hours.
+                        </p>
+                    </div>
+
+                    <div className="space-y-3">
+                        <button
+                            onClick={resendVerificationEmail}
+                            disabled={resendingEmail}
+                            className="w-full bg-custom-gradient text-white py-2 px-4 rounded-md hover:opacity-90 transition-opacity duration-200 disabled:opacity-50"
+                        >
+                            {resendingEmail ? "Resending..." : "Resend Verification Email"}
+                        </button>
+
+                        <Link
+                            to="/login"
+                            className="block w-full border border-gray-300 text-gray-700 py-2 px-4 rounded-md hover:bg-gray-50 transition-colors duration-200"
+                        >
+                            Back to Login
+                        </Link>
+                    </div>
+
+                    <div className="mt-6 p-4 bg-blue-50 rounded-md">
+                        <p className="text-sm text-blue-800">
+                            <strong>Didn't receive the email?</strong><br/>
+                            Check your spam folder or click "Resend Verification Email" above.
+                        </p>
+                    </div>
+                </div>
+            </div>
+        );
+    }
 
     return (
         <div

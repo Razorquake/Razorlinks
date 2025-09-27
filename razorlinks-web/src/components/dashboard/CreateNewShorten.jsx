@@ -1,7 +1,7 @@
-import {useStoreContext} from "../../contextApi/ContextApi.jsx";
+import {useStoreContext} from "../../store/ContextApi.jsx";
 import {useState} from "react";
 import {useForm} from "react-hook-form";
-import api from "../../api/api.js";
+import api from "../../services/api.js";
 import toast from "react-hot-toast";
 import TextField from "../TextField.jsx";
 import {Tooltip} from "@mui/material";
@@ -26,7 +26,7 @@ const CreateNewShorten = ({ setOpen, refetch }) => {
         setLoading(true);
         try {
             const { data: response } = await api.post(
-                "/api/urls/shorten",
+                "/urls/shorten",
                 data,
                 {
                     headers: {
@@ -45,6 +45,7 @@ const CreateNewShorten = ({ setOpen, refetch }) => {
                 });
             });
             reset();
+            refetch();
             setOpen(false);
         } catch (error) {
             toast.error("Error creating shorten"+error.message,);

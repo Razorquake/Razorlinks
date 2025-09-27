@@ -1,55 +1,174 @@
 package com.razorquake.razorlinks.service;
 
 import com.razorquake.razorlinks.dtos.LoginRequest;
+import com.razorquake.razorlinks.dtos.RegisterRequest;
+import com.razorquake.razorlinks.dtos.UserDTO;
+import com.razorquake.razorlinks.exception.EmailAlreadyExistsException;
+import com.razorquake.razorlinks.exception.EmailVerificationException;
+import com.razorquake.razorlinks.exception.RoleNotFoundException;
+import com.razorquake.razorlinks.exception.UsernameAlreadyExistsException;
+import com.razorquake.razorlinks.models.AppRole;
+import com.razorquake.razorlinks.models.Role;
 import com.razorquake.razorlinks.models.User;
+import com.razorquake.razorlinks.repository.RoleRepository;
 import com.razorquake.razorlinks.repository.UserRepository;
 import com.razorquake.razorlinks.security.jwt.JwtAuthenticationResponse;
 import com.razorquake.razorlinks.security.jwt.JwtUtils;
+import com.razorquake.razorlinks.security.service.UserDetailsImpl;
+import jakarta.transaction.Transactional;
 import lombok.AllArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
+import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
+
 @Service
 @AllArgsConstructor
+@Slf4j
 public class UserService {
-
     private PasswordEncoder passwordEncoder;
     private UserRepository userRepository;
     private AuthenticationManager authenticationManager;
     private JwtUtils jwtUtils;
+    private RoleRepository roleRepository;
+    private EmailVerificationService emailVerificationService;
 
-    public JwtAuthenticationResponse registerUser(User user){
-        user.setPassword(passwordEncoder.encode(user.getPassword()));
+    @Transactional
+    public Map<String, Object> registerUser(RegisterRequest registerRequest){
+        log.info("Registering user: {}", registerRequest);
+        if(userRepository.existsByUsername(registerRequest.getUsername()))
+            throw new UsernameAlreadyExistsException("Username already exists");
+        if (userRepository.existsByEmail(registerRequest.getEmail()))
+            throw new EmailAlreadyExistsException("Email already exists");
+
+        User user = new User();
+        user.setUsername(registerRequest.getUsername());
+        user.setEmail(registerRequest.getEmail());
+        Set<String> strRoles = registerRequest.getRole();
+        Role role;
+        if (strRoles == null || strRoles.isEmpty()) {
+            role = roleRepository.findByRoleName(AppRole.ROLE_USER)
+                    .orElseThrow(() -> new RoleNotFoundException("Error: Role is not found."));
+        } else {
+            String roleStr = strRoles.iterator().next();
+            if (roleStr.equals("admin")) {
+                role = roleRepository.findByRoleName(AppRole.ROLE_ADMIN)
+                        .orElseThrow(() -> new RoleNotFoundException("Error: Role is not found."));
+            } else {
+                role = roleRepository.findByRoleName(AppRole.ROLE_USER)
+                        .orElseThrow(() -> new RoleNotFoundException("Error: Role is not found."));
+            }
+        }
+        user.setRole(role);
+        user.setPassword(passwordEncoder.encode(registerRequest.getPassword()));
+        user.setSignUpMethod("email");
+        user.setEnabled(false);
         User savedUser = userRepository.save(user);
+        log.info("Saved user: {}", savedUser);
 
-        UserDetailsImpl userDetails = UserDetailsImpl.build(savedUser);
-        String jwt = jwtUtils.generateToken(userDetails);
-        return new JwtAuthenticationResponse(jwt);
+        emailVerificationService.sendVerificationEmail(savedUser);
+
+        Map<String, Object> response = new HashMap<>();
+        response.put("message", "User registered successfully. Please check your email to verify your account.");
+        response.put("email", savedUser.getEmail());
+        response.put("status", true);
+
+        return response;
     }
 
     public JwtAuthenticationResponse authenticateUser(LoginRequest loginRequest){
+
+        // First check if user exists and is enabled
+        User user = userRepository.findByUsername(loginRequest.getUsername())
+                .orElseThrow(() -> new UsernameNotFoundException("User not found with username: " + loginRequest.getUsername()));
+
+
+        if (!user.isEnabled()) {
+            throw new EmailVerificationException("Please verify your email address before logging in. Check your email for verification link.");
+        }
+
         Authentication authentication = authenticationManager.authenticate(
                 new UsernamePasswordAuthenticationToken(
                         loginRequest.getUsername(),
                         loginRequest.getPassword()
                 )
         );
+        // Set the authenticated user in the SecurityContext
         SecurityContextHolder.getContext().setAuthentication(authentication);
         UserDetailsImpl userDetails = (UserDetailsImpl) authentication.getPrincipal();
         String jwt = jwtUtils.generateToken(userDetails);
-        return new JwtAuthenticationResponse(jwt);
 
+        // Collect roles from the UserDetails
+        List<String> roles = userDetails.getAuthorities().stream()
+                .map(GrantedAuthority::getAuthority)
+                .toList();
 
+        // Return the response entity with the JWT token included in the response body
+        return new JwtAuthenticationResponse(jwt, roles);
     }
 
     public User findByUsername(String name) {
         return userRepository.findByUsername(name).orElseThrow(
-                () -> new UsernameNotFoundException("User not fount with username: "+name)
+                                () -> new UsernameNotFoundException("User not found with username: "+name)
         );
+    }
+
+    public List<UserDTO> getAllUsers() {
+        return userRepository.findAll()
+                .stream()
+                .map(this::convertToDto)
+                .toList();
+    }
+
+    public User loggedInUser() {
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        String currentUsername = authentication.getName();
+        return userRepository.findByUsername(currentUsername)
+                .orElseThrow(() -> new UsernameNotFoundException("User not found with username: " + currentUsername));
+    }
+
+    public UserDTO convertToDto(User user) {
+        return new UserDTO(
+                user.getId(),
+                user.getUsername(),
+                user.getEmail(),
+                user.isAccountNonLocked(),
+                user.isAccountNonExpired(),
+                user.isCredentialsNonExpired(),
+                user.isEnabled(),
+                user.getCredentialsExpiryDate(),
+                user.getAccountExpiryDate(),
+                user.getTwoFactorSecret(),
+                user.isTwoFactorEnabled(),
+                user.getSignUpMethod(),
+                user.getRole(),
+                user.getCreatedDate(),
+                user.getUpdatedDate()
+        );
+    }
+
+    public void updateUserRole(Long userId, String roleName) {
+        User user = userRepository.findById(userId).orElseThrow(()
+                -> new RuntimeException("User not found"));
+        AppRole appRole = AppRole.valueOf(roleName);
+        Role role = roleRepository.findByRoleName(appRole)
+                .orElseThrow(() -> new RuntimeException("Role not found"));
+        user.setRole(role);
+        userRepository.save(user);
+    }
+
+    public UserDTO getUserById(Long id) {
+        return convertToDto(userRepository.findById(id).orElseThrow(()
+                -> new RuntimeException("User not found")));
     }
 }

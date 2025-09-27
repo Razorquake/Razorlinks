@@ -36,7 +36,7 @@ const TextField = ({
                     pattern:
                         type === "email"
                             ? {
-                                value: /^[a-zA-Z0-9]+@(?:[a-zA-Z0-9]+\.)+com+$/,
+                                value: /^[a-zA-Z0-9.]+@(?:[a-zA-Z0-9]+\.)+(com|edu)+$/,
                                 message: "Invalid email",
                             }
                             : type === "url"

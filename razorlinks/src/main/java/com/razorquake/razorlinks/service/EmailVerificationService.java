@@ -1,0 +1,109 @@
+package com.razorquake.razorlinks.service;
+
+import com.razorquake.razorlinks.exception.EmailVerificationException;
+import com.razorquake.razorlinks.models.EmailVerificationToken;
+import com.razorquake.razorlinks.models.User;
+import com.razorquake.razorlinks.repository.EmailVerificationTokenRepository;
+import com.razorquake.razorlinks.repository.UserRepository;
+import com.razorquake.razorlinks.security.jwt.JwtAuthenticationResponse;
+import com.razorquake.razorlinks.security.jwt.JwtUtils;
+import com.razorquake.razorlinks.security.service.EmailService;
+import com.razorquake.razorlinks.security.service.UserDetailsImpl;
+import jakarta.transaction.Transactional;
+import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.scheduling.annotation.Scheduled;
+import org.springframework.stereotype.Service;
+
+import java.time.LocalDateTime;
+import java.util.List;
+import java.util.UUID;
+
+@Service
+@RequiredArgsConstructor
+@Slf4j
+public class EmailVerificationService {
+
+    private final EmailService emailService;
+    private final EmailVerificationTokenRepository tokenRepository;
+    private final UserRepository userRepository;
+    private final JwtUtils jwtUtils;
+
+    @Value("${frontend.url}")
+    private String frontendUrl;
+
+    @Transactional
+    public void sendVerificationEmail(User user) {
+        // Delete any existing tokens for this user
+        tokenRepository.findByUser(user).ifPresent(tokenRepository::delete);
+        tokenRepository.flush();
+
+        // Generate new token
+        String token = UUID.randomUUID().toString();
+        LocalDateTime expiresAt = LocalDateTime.now().plusHours(24); // 24-hour expiration
+
+        EmailVerificationToken verificationToken = new EmailVerificationToken(token, user, expiresAt);
+        tokenRepository.save(verificationToken);
+
+        // Send verification email
+        String verificationUrl = frontendUrl + "/verify-email?token=" + token;
+        emailService.sendVerificationEmail(user.getEmail(), verificationUrl);
+
+        log.info("Verification email sent to: {}", user.getEmail());
+    }
+
+    @Transactional
+    public JwtAuthenticationResponse verifyEmail(String token) {
+        EmailVerificationToken verificationToken = tokenRepository.findByToken(token)
+                .orElseThrow(() -> new EmailVerificationException("Invalid verification token"));
+
+        if (verificationToken.isExpired()) {
+            throw new EmailVerificationException("Verification token has expired");
+        }
+
+        if (verificationToken.isVerified()) {
+            throw new EmailVerificationException("Email has already been verified");
+        }
+
+        // Mark token as verified
+        verificationToken.setVerifiedAt(LocalDateTime.now());
+        tokenRepository.save(verificationToken);
+
+        // Enable user account
+        User user = verificationToken.getUser();
+        user.setEnabled(true);
+        User savedUser = userRepository.save(user);
+
+        log.info("Email verified for user: {}", user.getUsername());
+
+        UserDetailsImpl userDetails = UserDetailsImpl.build(savedUser);
+        String jwt = jwtUtils.generateToken(userDetails);
+        List<String> roles = userDetails.getAuthorities().stream()
+                .map(grantedAuthority -> grantedAuthority.getAuthority())
+                .toList();
+        return new JwtAuthenticationResponse(jwt, roles);
+
+
+    }
+
+    @Transactional
+    public void resendVerificationEmail(String email) {
+        User user = userRepository.findByEmail(email)
+                .orElseThrow(() -> new EmailVerificationException("User not found with email: " + email));
+
+        if (user.isEnabled()) {
+            throw new EmailVerificationException("Email is already verified");
+        }
+
+        sendVerificationEmail(user);
+    }
+
+    // Clean up expired tokens daily at 2 AM
+    @Scheduled(cron = "0 0 2 * * ?")
+    @Transactional
+    public void cleanupExpiredTokens() {
+        tokenRepository.deleteExpiredTokens(LocalDateTime.now());
+        log.info("Cleaned up expired verification tokens");
+    }
+}

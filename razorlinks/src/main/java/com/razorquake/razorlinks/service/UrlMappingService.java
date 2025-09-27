@@ -24,6 +24,15 @@ public class UrlMappingService {
     private UrlMappingRepository urlMappingRepository;
     private ClickEventRepository clickEventRepository;
 
+
+    public void deleteUrlMapping(String shortUrl, User user) {
+        UrlMapping urlMapping = urlMappingRepository.findByShortUrl(shortUrl);
+        if (urlMapping != null && urlMapping.getUser().getId().equals(user.getId())) {
+            clickEventRepository.deleteAll(clickEventRepository.findByUrlMapping(urlMapping));
+            urlMappingRepository.delete(urlMapping);
+        }
+    }
+
     public UrlMappingDTO createShortUrl(String originalUrl, User user) {
         String shortUrl = generateShortUrl();
         UrlMapping urlMapping = new UrlMapping();
@@ -31,8 +40,7 @@ public class UrlMappingService {
         urlMapping.setOriginalUrl(originalUrl);
         urlMapping.setUser(user);
         urlMapping.setCreatedDate(LocalDateTime.now());
-        UrlMapping savedUrlMapping = urlMappingRepository.save(urlMapping);
-        return convertToDto(savedUrlMapping);
+        return convertToDto(urlMappingRepository.save(urlMapping));
     }
 
     private UrlMappingDTO convertToDto(UrlMapping urlMapping) {

@@ -1,4 +1,4 @@
-package com.razorquake.razorlinks.service;
+package com.razorquake.razorlinks.security.service;
 
 import com.razorquake.razorlinks.models.User;
 import com.razorquake.razorlinks.repository.UserRepository;

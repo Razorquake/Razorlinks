@@ -3,6 +3,7 @@ import {FaExclamationTriangle} from "react-icons/fa";
 
 const ErrorPage = ({message}) => {
     const navigate = useNavigate();
+
     return (
         <div className="flex flex-col items-center justify-center min-h-[calc(100vh-64px)] bg-gray-100 p-6">
             <FaExclamationTriangle className='text-6xl text-red-500 mb-4' />

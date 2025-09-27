@@ -3,18 +3,23 @@ import { Link, useLocation, useNavigate } from "react-router-dom";
 import { IoIosMenu } from "react-icons/io";
 import { RxCross2 } from "react-icons/rx";
 import { motion } from "motion/react"
-import {useStoreContext} from "../contextApi/ContextApi.jsx";
+import {useStoreContext} from "../store/ContextApi.jsx";
 
 
 const Navbar = () => {
     const navigate = useNavigate();
-    const {token, setToken} = useStoreContext();
+    const {token, setToken,  setCurrentUser, isAdmin, setIsAdmin} = useStoreContext();
     const path = useLocation().pathname;
     const [navbarOpen, setNavbarOpen] = useState(false);
 
     const onLogOutHandler = () => {
         setToken(null);
+        setCurrentUser(null);
+        setIsAdmin(false);
         localStorage.removeItem("JWT_TOKEN");
+        localStorage.removeItem("USER"); // Remove user details as well
+        localStorage.removeItem("CSRF_TOKEN");
+        localStorage.removeItem("IS_ADMIN");
         navigate("/login");
     };
 
@@ -60,6 +65,30 @@ const Navbar = () => {
                                 to="/dashboard"
                             >
                                 Dashboard
+                            </Link>
+                        </li>
+                    )}
+                    {token && (
+                        <li className="hover:text-btnColor font-[500]  transition-all duration-150">
+                            <Link
+                                className={`${
+                                    path === "/profile" ? "text-white font-semibold" : "text-gray-200"
+                                }`}
+                                to="/profile"
+                            >
+                                Profile
+                            </Link>
+                        </li>
+                    )}
+                    {token && isAdmin && (
+                        <li className="hover:text-btnColor font-[500]  transition-all duration-150">
+                            <Link
+                                className={`${
+                                    path.startsWith("/admin") ? "text-white font-semibold" : "text-gray-200"
+                                }`}
+                                to="/admin/users"
+                            >
+                                Admin
                             </Link>
                         </li>
                     )}

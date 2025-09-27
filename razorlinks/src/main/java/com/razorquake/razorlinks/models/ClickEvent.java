@@ -1,12 +1,15 @@
 package com.razorquake.razorlinks.models;
 
 import jakarta.persistence.*;
-import lombok.Data;
+import lombok.*;
 
 import java.time.LocalDateTime;
 
 @Entity
-@Data
+@Getter
+@Setter
+@ToString
+@RequiredArgsConstructor
 @Table(name = "clickEvents")
 public class ClickEvent {
     @Id

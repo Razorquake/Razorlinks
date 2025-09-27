@@ -5,11 +5,10 @@ import dayjs from "dayjs";
 import CopyAndAnalytics from "./CopyAndAnalytics.jsx";
 import {Fragment, useEffect, useState} from "react";
 import Graph from "./Graph.jsx";
-import api from "../../api/api.js";
-import {useStoreContext} from "../../contextApi/ContextApi.jsx";
+import api from "../../services/api.js";
+import toast from "react-hot-toast";
 
-const ShortenItem = ({originalUrl, shortUrl, clickCount, createDate}) => {
-    const { token } = useStoreContext();
+const ShortenItem = ({originalUrl, shortUrl, clickCount, createDate, onUrlDeleted}) => {
     const navigate = useNavigate();
     const subDomain = import.meta.env.VITE_REACT_FRONT_END_URL.replace(/^https?:\/\//, "");
     const [analyticToggle, setAnalyticToggle] = useState(false);
@@ -23,16 +22,21 @@ const ShortenItem = ({originalUrl, shortUrl, clickCount, createDate}) => {
         setAnalyticToggle(!analyticToggle);
     }
 
+    const handleDelete = async (shortUrl) => {
+        try {
+            await api.delete(`/urls/${shortUrl}`);
+            toast.success("Short URL deleted successfully!");
+            onUrlDeleted();
+        } catch (error) {
+            console.error("Error deleting URL:", error);
+            toast.error("Failed to delete URL. Please try again.");
+        }
+    };
+
     const fetchMyShortUrl = async () => {
         setLoader(true);
         try {
-            const { data } = await api.get(`/api/urls/analytics/${selectedUrl}?startDate=2024-12-01T00:00:00&endDate=2025-12-31T23:59:59`, {
-                headers: {
-                    "Content-Type": "application/json",
-                    Accept: "application/json",
-                    Authorization: "Bearer " + token,
-                },
-            });
+            const { data } = await api.get(`/urls/analytics/${selectedUrl}?startDate=2024-12-01T00:00:00&endDate=2025-12-31T23:59:59`);
             setAnalyticsData(data);
             setSelectedUrl("");
             console.log(data);
@@ -92,6 +96,7 @@ const ShortenItem = ({originalUrl, shortUrl, clickCount, createDate}) => {
             <CopyAndAnalytics
                 shortUrl={shortUrl}
                 analyticsHandler={analyticsHandler}
+                onDelete={handleDelete}
             />
         </div>
         <Fragment>

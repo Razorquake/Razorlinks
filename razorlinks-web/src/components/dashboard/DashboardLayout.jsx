@@ -1,5 +1,4 @@
 import Graph from "./Graph.jsx";
-import {useStoreContext} from "../../contextApi/ContextApi.jsx";
 import {useFetchMyShortUrls, useFetchTotalClicks} from "../../hooks/useQuery.js";
 import {useState} from "react";
 import ShortenPopUp from "./ShortenPopUp.jsx";
@@ -8,10 +7,9 @@ import ShortenUrlList from "./ShortenUrlList.jsx";
 import Loader from "../Loader.jsx";
 
 const DashboardLayout = () => {
-    const {token} = useStoreContext();
-    const {isLoading: loader, data: totalClicks} = useFetchTotalClicks(token)
+    const {isLoading: loader, data: totalClicks} = useFetchTotalClicks()
     const [shortenPopUp, setShortenPopUp] = useState(false);
-    const {isLoading, data: myShortenUrls, refetch } = useFetchMyShortUrls(token)
+    const {isLoading, data: myShortenUrls, refetch } = useFetchMyShortUrls()
     return (
         <div className="lg:px-14 sm:px-8 px-4 min-h-[calc(100vh-64px)]">
             {loader ? (
@@ -52,7 +50,7 @@ const DashboardLayout = () => {
                                 </div>
                             </div>
                         ):(
-                            <ShortenUrlList data={myShortenUrls}/>
+                            <ShortenUrlList data={myShortenUrls} onRefetch={refetch}/>
                         )}
                     </div>
                 </div>

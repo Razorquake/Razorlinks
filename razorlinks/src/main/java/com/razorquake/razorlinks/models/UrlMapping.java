@@ -2,13 +2,16 @@ package com.razorquake.razorlinks.models;
 
 
 import jakarta.persistence.*;
-import lombok.Data;
+import lombok.*;
 
 import java.time.LocalDateTime;
 import java.util.List;
 
 @Entity
-@Data
+@Getter
+@Setter
+@ToString
+@RequiredArgsConstructor
 @Table(name = "urlMapping")
 public class UrlMapping {
     @Id
@@ -22,6 +25,7 @@ public class UrlMapping {
     @ManyToOne
     private User user;
 
-    @OneToMany(mappedBy = "urlMapping")
+    @OneToMany(mappedBy = "urlMapping", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.LAZY)
+    @ToString.Exclude
     private List<ClickEvent> clickEvents;
 }
