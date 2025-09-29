@@ -162,7 +162,7 @@ public class UserService {
                 -> new RuntimeException("User not found"));
         AppRole appRole = AppRole.valueOf(roleName);
         Role role = roleRepository.findByRoleName(appRole)
-                .orElseThrow(() -> new RuntimeException("Role not found"));
+                .orElseThrow(() -> new RoleNotFoundException("Role not found"));
         user.setRole(role);
         userRepository.save(user);
     }
@@ -170,5 +170,46 @@ public class UserService {
     public UserDTO getUserById(Long id) {
         return convertToDto(userRepository.findById(id).orElseThrow(()
                 -> new RuntimeException("User not found")));
+    }
+
+    public void updateAccountLockStatus(Long userId, boolean lock) {
+        User user = userRepository.findById(userId).orElseThrow(()
+                -> new RuntimeException("User not found"));
+        user.setAccountNonLocked(!lock);
+        userRepository.save(user);
+    }
+
+    public void updateAccountExpiryStatus(Long userId, boolean expiry) {
+        User user = userRepository.findById(userId).orElseThrow(()
+                -> new RuntimeException("User not found"));
+        user.setAccountNonExpired(!expiry);
+        userRepository.save(user);
+    }
+
+    public void updateCredentialsExpiryStatus(Long userId, boolean expiry) {
+        User user = userRepository.findById(userId).orElseThrow(()
+                -> new RuntimeException("User not found")
+        );
+        user.setCredentialsNonExpired(!expiry);
+        userRepository.save(user);
+    }
+
+    public void updatePassword(Long userId, String newPassword) {
+        User user = userRepository.findById(userId).orElseThrow(()
+                -> new RuntimeException("User not found")
+        );
+        user.setPassword(passwordEncoder.encode(newPassword));
+        userRepository.save(user);
+    }
+
+    public List<Role> getAllRoles() {
+        return roleRepository.findAll();
+    }
+
+    public void updateAccountEnabledStatus(Long userId, boolean enabled) {
+        User user = userRepository.findById(userId).orElseThrow(()
+                -> new RuntimeException("User not found"));
+        user.setEnabled(enabled);
+        userRepository.save(user);
     }
 }

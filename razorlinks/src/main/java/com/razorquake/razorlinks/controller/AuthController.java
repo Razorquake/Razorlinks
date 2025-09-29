@@ -57,7 +57,7 @@ public class AuthController {
 
     @PostMapping("/public/resend-verification")
     public ResponseEntity<?> resendVerificationEmail(@RequestBody ResendVerificationRequest request) {
-        emailVerificationService.resendVerificationEmail(request.getEmail());
+        emailVerificationService.resendVerificationEmail(request.getUsername());
 
         Map<String, Object> response = new HashMap<>();
         response.put("message", "Verification email sent successfully. Please check your email.");

@@ -7,7 +7,7 @@ import com.razorquake.razorlinks.models.UrlMapping;
 import com.razorquake.razorlinks.models.User;
 import com.razorquake.razorlinks.repository.ClickEventRepository;
 import com.razorquake.razorlinks.repository.UrlMappingRepository;
-import lombok.AllArgsConstructor;
+import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDate;
@@ -18,11 +18,12 @@ import java.util.Random;
 import java.util.stream.Collectors;
 
 @Service
-@AllArgsConstructor
+@RequiredArgsConstructor
 public class UrlMappingService {
 
-    private UrlMappingRepository urlMappingRepository;
-    private ClickEventRepository clickEventRepository;
+    private final UrlMappingRepository urlMappingRepository;
+    private final ClickEventRepository clickEventRepository;
+    private final AuditLogService auditLogService;
 
 
     public void deleteUrlMapping(String shortUrl, User user) {
@@ -30,6 +31,7 @@ public class UrlMappingService {
         if (urlMapping != null && urlMapping.getUser().getId().equals(user.getId())) {
             clickEventRepository.deleteAll(clickEventRepository.findByUrlMapping(urlMapping));
             urlMappingRepository.delete(urlMapping);
+            auditLogService.shortURLDeleted(urlMapping);
         }
     }
 
@@ -40,7 +42,9 @@ public class UrlMappingService {
         urlMapping.setOriginalUrl(originalUrl);
         urlMapping.setUser(user);
         urlMapping.setCreatedDate(LocalDateTime.now());
-        return convertToDto(urlMappingRepository.save(urlMapping));
+        UrlMapping savedUrlMapping = urlMappingRepository.save(urlMapping);
+        auditLogService.shortURLCreated(savedUrlMapping);
+        return convertToDto(savedUrlMapping);
     }
 
     private UrlMappingDTO convertToDto(UrlMapping urlMapping) {
@@ -105,7 +109,7 @@ public class UrlMappingService {
             ClickEvent clickEvent = new ClickEvent();
             clickEvent.setClickDate(LocalDateTime.now());
             clickEvent.setUrlMapping(urlMapping);
-            clickEventRepository.save(clickEvent);
+            auditLogService.shortURLClicked(clickEventRepository.save(clickEvent));
         }
         return urlMapping;
     }

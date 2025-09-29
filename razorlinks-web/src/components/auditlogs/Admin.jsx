@@ -1,9 +1,11 @@
 import React from 'react';
 import AdminAuditLogs from "./AdminAuditLogs.jsx";
+import {Route, Routes} from "react-router-dom";
 import {useStoreContext} from "../../store/ContextApi.jsx";
 import Sidebar from "./AdminAreaSidebar.jsx";
 import UserList from "./UserList.jsx";
 import UserDetails from "./UserDetails.jsx";
+import AuditLogsDetails from "./AuditLogsDetails.jsx";
 
 const Admin = () => {
     const { openSidebar } = useStoreContext();
@@ -17,7 +19,7 @@ const Admin = () => {
             >
                 <Routes>
                     <Route path="audit-logs" element={<AdminAuditLogs />} />
-                    <Route path="audit-logs/:noteId" element={<AuditLogsDetails />} />
+                    <Route path="audit-logs/:urlMappingId" element={<AuditLogsDetails />} />
                     <Route path="users" element={<UserList />} />
                     <Route path="users/:userId" element={<UserDetails />} />
                     {/* Add other routes as necessary */}

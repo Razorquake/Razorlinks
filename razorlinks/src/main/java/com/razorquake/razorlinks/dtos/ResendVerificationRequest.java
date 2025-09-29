@@ -4,5 +4,5 @@ import lombok.Data;
 
 @Data
 public class ResendVerificationRequest {
-    private String email;
+    private String username;
 }

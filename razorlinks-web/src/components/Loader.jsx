@@ -7,11 +7,14 @@ function Loader() {
                 <FadeLoader
                     height={20}
                     width={5}
-                    color="red"
+                    color="#4fa94d"
                     loading={true}
                     radius={5}
                     speedMultiplier={0.75}
                 />
+                <span className="text-slate-700 text-lg font-semibold">
+                    Please wait...
+                </span>
             </div>
         </div>
     )

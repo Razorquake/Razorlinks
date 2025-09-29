@@ -4,12 +4,14 @@ import TextField from "./TextField.jsx";
 import {Link } from "react-router-dom";
 import api from "../services/api.js";
 import toast from "react-hot-toast";
+import { useEmailVerification } from '../hooks/useEmailVerification.js';
 
 const RegisterPage = () => {
     const [registrationComplete, setRegistrationComplete] = useState(false);
     const [loader, setLoader] = useState(false);
+    const { resendVerificationEmail, resendingEmail } = useEmailVerification();
     const [userEmail, setUserEmail] = useState("");
-    const [resendingEmail, setResendingEmail] = useState(false);
+    const [userUsername, setUserUsername] = useState(""); // Add this state
 
     const {
         register,
@@ -32,10 +34,11 @@ const RegisterPage = () => {
                 "/auth/public/register",
                 data
             );
-            // Show success message
+            // Show a success message
             toast.success(response.message);
             // Store email for resend functionality
             setUserEmail(data.email);
+            setUserUsername(data.username); // Store username instead of email
             // Show verification message
             setRegistrationComplete(true);
 
@@ -49,26 +52,6 @@ const RegisterPage = () => {
             }
         } finally {
             setLoader(false);
-        }
-    };
-
-    const resendVerificationEmail = async () => {
-        setResendingEmail(true);
-        try {
-            const { data: response } = await api.post(
-                "/auth/public/resend-verification",
-                { email: userEmail }
-            );
-            toast.success(response.message);
-        } catch (error) {
-            console.log(error);
-            if (error.response?.data?.message) {
-                toast.error(error.response.data.message);
-            } else {
-                toast.error("Failed to resend verification email. Please try again.");
-            }
-        } finally {
-            setResendingEmail(false);
         }
     };
 
@@ -95,7 +78,7 @@ const RegisterPage = () => {
 
                     <div className="space-y-3">
                         <button
-                            onClick={resendVerificationEmail}
+                            onClick={()=>resendVerificationEmail(userUsername)}
                             disabled={resendingEmail}
                             className="w-full bg-custom-gradient text-white py-2 px-4 rounded-md hover:opacity-90 transition-opacity duration-200 disabled:opacity-50"
                         >

@@ -6,10 +6,10 @@ import moment from "moment";
 import {useStoreContext} from "../../store/ContextApi.jsx";
 import Errors from "../Errors.jsx";
 import {jwtDecode} from "jwt-decode";
-import {FadeLoader} from "react-spinners";
 import {Accordion, AccordionDetails, AccordionSummary, Avatar, Switch} from "@mui/material";
 import TextField from "../TextField.jsx";
 import ArrowDropDownIcon from "@mui/icons-material/ArrowDropDown";
+import Loader from "../Loader.jsx";
 
 
 const UserProfile = () => {
@@ -72,7 +72,7 @@ const UserProfile = () => {
         fetch2FAStatus();
     }, []);
 
-    //enable the 2fa
+    //enable the 2FA
     const enable2FA = async () => {
         setDisbledLoader(true);
         try {
@@ -87,7 +87,7 @@ const UserProfile = () => {
         }
     };
 
-    //diable the 2fa
+    //diable the 2FA
     const disable2FA = async () => {
         setDisbledLoader(true);
         try {
@@ -102,7 +102,7 @@ const UserProfile = () => {
         }
     };
 
-    //verify the 2fa
+    //verify the 2FA
     const verify2FA = async () => {
         if (!code || code.trim().length === 0)
             return toast.error("Please Enter The Code To Verify");
@@ -302,23 +302,7 @@ const UserProfile = () => {
     return (
         <div className="min-h-[calc(100vh-74px)] py-10">
             {pageLoader ? (
-                <>
-                    {" "}
-                    <div className="flex  flex-col justify-center items-center  h-72">
-            <span>
-              <FadeLoader
-                  height="70"
-                  width="70"
-                  color="#4fa94d"
-                  ariaLabel="blocks-loading"
-                  wrapperStyle={{}}
-                  wrapperClass="blocks-wrapper"
-                  loading={true}
-              />
-            </span>
-                        <span>Please wait...</span>
-                    </div>
-                </>
+                <Loader/>
             ) : (
                 <>
                     {" "}
@@ -402,7 +386,7 @@ const UserProfile = () => {
                                                 />
                                                 <button
                                                     disabled={loading}
-                                                    className="bg-customRed font-semibold flex justify-center text-white w-full py-2 hover:text-slate-400 transition-colors duration-100 rounded-sm my-3"
+                                                    className="bg-rose-700 font-semibold flex justify-center text-white w-full py-2 hover:text-slate-400 transition-colors duration-100 rounded-sm my-3"
                                                     type="submit"
                                                 >
                                                     {loading ? <span>Loading...</span> : "Update"}
@@ -503,7 +487,7 @@ const UserProfile = () => {
                                     <span>Authentication (MFA)</span>
                                     <span
                                         className={` ${
-                                            is2faEnabled ? "bg-green-800" : "bg-customRed"
+                                            is2faEnabled ? "bg-green-800" : "bg-rose-700"
                                         } px-2 text-center py-1 text-xs mt-2 rounded-sm text-white`}
                                     >
                     {is2faEnabled ? "Activated" : "Deactivated"}
@@ -523,7 +507,7 @@ const UserProfile = () => {
                                     disabled={disabledLoader}
                                     onClick={is2faEnabled ? disable2FA : enable2FA}
                                     className={` ${
-                                        is2faEnabled ? "bg-customRed" : "bg-btnColor"
+                                        is2faEnabled ? "bg-rose-700" : "bg-btn-color"
                                     } px-5 py-1 hover:text-slate-300 rounded-sm text-white mt-2`}
                                 >
                                     {disabledLoader ? (
@@ -562,7 +546,7 @@ const UserProfile = () => {
                                                         onChange={(e) => setCode(e.target.value)}
                                                     />
                                                     <button
-                                                        className="bg-btnColor text-white  px-3 h-10 rounded-md mt-4"
+                                                        className="bg-btn-color text-white  px-3 h-10 rounded-md mt-4"
                                                         onClick={verify2FA}
                                                     >
                                                         {twofaCodeLoader ? "Loading..." : "Verify 2FA"}

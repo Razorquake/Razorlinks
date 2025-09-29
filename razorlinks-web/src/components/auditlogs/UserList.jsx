@@ -7,8 +7,8 @@ import api from "../../services/api.js";
 import moment from "moment";
 import {MdDateRange, MdOutlineEmail} from "react-icons/md";
 import Errors from "../Errors.jsx";
-import {FadeLoader} from "react-spinners";
 import {Link} from "react-router-dom";
+import Loader from "../Loader.jsx";
 
 
 export const userListsColumns = [
@@ -22,7 +22,7 @@ export const userListsColumns = [
         editable: false,
         headerClassName: "text-black font-semibold border",
         cellClassName: "text-slate-700 font-normal  border",
-        renderHeader: () => <span className="text-center">UserName</span>,
+        renderHeader: () => <span className="text-center">Username</span>,
     },
 
     {
@@ -96,9 +96,9 @@ export const userListsColumns = [
             return (
                 <Link
                     to={`/admin/users/${params.id}`}
-                    className="h-full flex  items-center justify-center   "
+                    className="h-full flex  items-center justify-center"
                 >
-                    <button className="bg-btnColor text-white px-4 flex justify-center items-center  h-9 rounded-md ">
+                    <button className="bg-btn-color text-white px-4 flex justify-center items-center  h-9 rounded-md ">
                         Views
                     </button>
                 </Link>
@@ -159,24 +159,7 @@ const UserList = () => {
                 </h1>
             </div>
             <div className="overflow-x-auto w-full mx-auto">
-                {loading ? (
-                    <>
-                        <div className="flex  flex-col justify-center items-center  h-72">
-              <span>
-                <FadeLoader
-                    height="70"
-                    width="70"
-                    color="#4fa94d"
-                    ariaLabel="blocks-loading"
-                    wrapperStyle={{}}
-                    wrapperClass="blocks-wrapper"
-                    visible={true}
-                />
-              </span>
-                            <span>Please wait...</span>
-                        </div>
-                    </>
-                ) : (
+                {loading ? (<Loader/>) : (
                     <>
                         {" "}
                         <DataGrid

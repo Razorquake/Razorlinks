@@ -7,12 +7,14 @@ import api from "../services/api.js";
 import toast from "react-hot-toast";
 import {useStoreContext} from "../store/ContextApi.jsx";
 import Divider from "@mui/material/Divider";
+import { useEmailVerification } from '../hooks/useEmailVerification.js';
 import {FcGoogle} from "react-icons/fc";
 import {FaGithub} from "react-icons/fa";
 
 const LoginPage = () => {
     // Step 1: Login method and Step 2: Verify 2FA
     const apiUrl = import.meta.env.VITE_REACT_BACKEND_URL;
+    const { resendVerificationEmail, resendingEmail } = useEmailVerification();
     const [step, setStep] = useState(1);
     const [jwtToken, setJwtToken] = useState("");
     const navigate = useNavigate()
@@ -33,6 +35,30 @@ const LoginPage = () => {
         },
         mode: "onTouched",
     });
+
+    const showResendVerificationToast = (username) => {
+        toast((t) => (
+            <div className="text-center">
+                <p className="mb-2">Need to resend verification email?</p>
+                <button
+                    onClick={async () => {
+                        const success = await resendVerificationEmail(username);
+                        toast.dismiss(t.id);
+                        if (success) {
+                            toast.success("Verification email sent! Please check your inbox.");
+                        }
+                    }}
+                    disabled={resendingEmail}
+                    className="bg-blue-600 text-white px-3 py-1 rounded text-sm hover:bg-blue-700 disabled:opacity-50"
+                >
+                    {resendingEmail ? "Sending..." : "Resend Email"}
+                </button>
+            </div>
+        ), {
+            duration: 10000,
+            id: 'resend-verification'
+        })
+    };
 
     const handleSuccessfulLogin = (token, decodedToken) => {
         const user = {
@@ -79,23 +105,15 @@ const LoginPage = () => {
                 toast.error(error.response.data.message);
                 // Check if it's an email verification error
                 if (error.response.data.message.includes("verify your email")) {
-                    // Add a link to resend verification email if needed
-                    setTimeout(() => {
-                        toast((t) => (
-                            <div className="text-center">
-                                <p className="mb-2">Need to resend verification email?</p>
-                                <button
-                                    onClick={() => {
-                                        navigate("/register");
-                                        toast.dismiss(t.id);
-                                    }}
-                                    className="text-blue-600 underline text-sm"
-                                >
-                                    Go to Registration
-                                </button>
-                            </div>
-                        ), { duration: 6000 });
-                    }, 1000);
+                    const errorMessage = error.response.data.message;
+                    toast.error(errorMessage);
+
+                    // Check if it's an email verification error
+                    if (errorMessage.includes("verify your email")) {
+                        setTimeout(() => {
+                            showResendVerificationToast(data.username);
+                        }, 1000);
+                    }
                 }
             } else {
                 toast.error("Login failed. Please try again.");
@@ -251,7 +269,7 @@ const LoginPage = () => {
                         <button
                             disabled={loader}
                             onClick={() => {}}
-                            className="bg-customRed font-semibold text-white w-full py-2 hover:text-slate-400 transition-colors duration-100 rounded-sm my-3"
+                            className="bg-custom-gradient font-semibold text-white w-full py-2 hover:text-slate-400 transition-colors duration-100 rounded-sm my-3"
                             type="text"
                         >
                             {loader ? <span>Loading...</span> : "Verify 2FA"}

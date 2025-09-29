@@ -4,8 +4,8 @@ import {useParams} from "react-router-dom";
 import api from "../../services/api.js";
 import toast from "react-hot-toast";
 import Errors from "../Errors.jsx";
-import {FadeLoader} from "react-spinners";
 import TextField from "../TextField.jsx";
+import Loader from "../Loader.jsx";
 
 const UserDetails = () => {
     const {
@@ -49,7 +49,7 @@ const UserDetails = () => {
     }, [userId]);
 
     useEffect(() => {
-        //if user exist set the value by using the setValue function provided my react-hook-form
+        //if user exists set the value by using the setValue function provided my react-hook-form
         if (user && Object.keys(user).length > 0) {
             setValue("username", user.userName);
             setValue("email", user.email);
@@ -167,23 +167,7 @@ const UserDetails = () => {
     return (
         <div className="sm:px-12 px-4 py-10   ">
             {loading ? (
-                <>
-                    {" "}
-                    <div className="flex  flex-col justify-center items-center  h-72">
-            <span>
-              <FadeLoader
-                  height="70"
-                  width="70"
-                  color="#4fa94d"
-                  ariaLabel="blocks-loading"
-                  wrapperStyle={{}}
-                  wrapperClass="blocks-wrapper"
-                  visible={true}
-              />
-            </span>
-                        <span>Please wait...</span>
-                    </div>
-                </>
+                <Loader/>
             ) : (
                 <>
                     <div className="lg:w-[70%] sm:w-[90%] w-full  mx-auto shadow-lg shadow-gray-300 p-8 rounded-md">
@@ -240,7 +224,7 @@ const UserDetails = () => {
                                         onClick={() =>
                                             setIsEditingPassword(!isEditingPassword)
                                         }
-                                        className="bg-customRed mb-0 w-fit px-4 py-2 rounded-md text-white"
+                                        className="bg-rose-700 mb-0 w-fit px-4 py-2 rounded-md text-white"
                                     >
                                         Click To Edit Password
                                     </button>
@@ -248,7 +232,7 @@ const UserDetails = () => {
                                     <div className="flex items-center gap-2 ">
                                         <button
                                             type="submit"
-                                            className="bg-btnColor mb-0 w-fit px-4 py-2 rounded-md text-white"
+                                            className="bg-btn-color mb-0 w-fit px-4 py-2 rounded-md text-white"
                                         >
                                             {passwordLoader ? "Loading.." : "Save"}
                                         </button>
@@ -257,7 +241,7 @@ const UserDetails = () => {
                                             onClick={() =>
                                                 setIsEditingPassword(!isEditingPassword)
                                             }
-                                            className="bg-customRed mb-0 w-fit px-4 py-2 rounded-md text-white"
+                                            className="bg-rose-700 mb-0 w-fit px-4 py-2 rounded-md text-white"
                                         >
                                             Cancel
                                         </button>
@@ -294,7 +278,7 @@ const UserDetails = () => {
                                 </select>
                             </div>
                             <button
-                                className="bg-btnColor hover:text-slate-300 px-4 py-2 rounded-md text-white "
+                                className="bg-btn-color hover:text-slate-300 px-4 py-2 rounded-md text-white "
                                 onClick={handleUpdateRole}
                             >
                                 {updateRoleLoader ? "Loading..." : "Update Role"}

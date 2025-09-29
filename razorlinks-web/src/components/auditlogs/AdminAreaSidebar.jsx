@@ -3,6 +3,7 @@ import {useLocation} from "react-router-dom";
 import {FaArrowLeft, FaArrowRight, FaUser} from "react-icons/fa";
 import {Tooltip} from "@mui/material";
 import {LiaBlogSolid} from "react-icons/lia";
+import {Link} from "react-router-dom";
 
 const Sidebar = () => {
     // Access the openSidebar and setOpenSidebar function using the useMyContext hook from the ContextProvider
@@ -13,7 +14,7 @@ const Sidebar = () => {
 
     return (
         <div
-            className={`fixed p-2 top-[74px] min-h-[calc(100vh-74px)] max-h-[calc(100vh-74px)]  z-20  left-0 bg-headerColor ${
+            className={`fixed p-2 top-[74px] min-h-[calc(100vh-74px)] max-h-[calc(100vh-74px)]  z-20  left-0 bg-black ${
                 openSidebar ? "w-52" : "w-12"
             } transition-all duration-150  `}
         >
@@ -47,9 +48,9 @@ const Sidebar = () => {
                         to="/admin/users"
                         className={`flex text-white items-center gap-2 ${
                             pathName.startsWith("/admin/users")
-                                ? "bg-btnColor"
+                                ? "bg-btn-color"
                                 : "bg-transparent"
-                        }   min-h-10 max-h-10 py-2 px-2 rounded-md hover:bg-btnColor`}
+                        }   min-h-10 max-h-10 py-2 px-2 rounded-md hover:bg-btn-color`}
                     >
                         <span><FaUser/></span>
                         <span
@@ -64,9 +65,9 @@ const Sidebar = () => {
                         to="/admin/audit-logs"
                         className={`flex text-white items-center gap-2 ${
                             pathName.startsWith("/admin/audit-logs")
-                                ? "bg-btnColor"
+                                ? "bg-btn-color"
                                 : "bg-transparent"
-                        }   min-h-10 max-h-10 py-2 px-2 rounded-md hover:bg-btnColor`}
+                        }   min-h-10 max-h-10 py-2 px-2 rounded-md hover:bg-btn-color`}
                     >
                         <span><LiaBlogSolid className="text-xl" /></span>
                         <span

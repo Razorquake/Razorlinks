@@ -88,12 +88,12 @@ public class EmailVerificationService {
     }
 
     @Transactional
-    public void resendVerificationEmail(String email) {
-        User user = userRepository.findByEmail(email)
-                .orElseThrow(() -> new EmailVerificationException("User not found with email: " + email));
+    public void resendVerificationEmail(String username) {
+        User user = userRepository.findByUsername(username)
+                .orElseThrow(() -> new EmailVerificationException("User not found with username: " + username));
 
         if (user.isEnabled()) {
-            throw new EmailVerificationException("Email is already verified");
+            throw new EmailVerificationException("Username is already verified");
         }
 
         sendVerificationEmail(user);

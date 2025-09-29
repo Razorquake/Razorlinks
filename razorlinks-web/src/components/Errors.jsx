@@ -19,7 +19,7 @@ const Errors = ({ message }) => {
                 <div className="flex justify-center">
                     <button
                         onClick={onBackHandler}
-                        className="flex items-center px-4 py-2 bg-btnColor text-white rounded  focus:outline-none focus:ring-2 focus:ring-blue-300"
+                        className="flex items-center px-4 py-2 bg-btn-color text-white rounded  focus:outline-none focus:ring-2 focus:ring-blue-300"
                     >
                         Go Back
                     </button>

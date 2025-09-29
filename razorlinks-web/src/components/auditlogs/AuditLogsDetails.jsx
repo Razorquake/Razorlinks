@@ -1,14 +1,13 @@
 import {MdDateRange} from "react-icons/md";
-import {auditLogsTruncateTexts} from "../../utils/truncateText.js";
 import Errors from "../Errors.jsx";
 import {DataGrid} from "@mui/x-data-grid";
 import moment from "moment";
 import {useCallback, useEffect, useState} from "react";
 import api from "../../services/api.js";
 import {useParams} from "react-router-dom";
-import {FadeLoader} from "react-spinners";
+import Loader from "../Loader.jsx";
 
-const auditLogscolumn = [
+const auditLogColumns = [
     {
         field: "actions",
         headerName: "Action",
@@ -58,8 +57,8 @@ const auditLogscolumn = [
         },
     },
     {
-        field: "noteid",
-        headerName: "NoteId",
+        field: "urlMappingId",
+        headerName: "URLMappingId",
         disableColumnMenu: true,
         width: 150,
         editable: false,
@@ -67,32 +66,25 @@ const auditLogscolumn = [
         align: "center",
         headerClassName: "text-black font-semibold border",
         cellClassName: "text-slate-700 font-normal  border",
-        renderHeader: () => <span>NoteId</span>,
+        renderHeader: () => <span>URLMappingId</span>,
     },
     {
-        field: "note",
-        headerName: "Note Content",
-        width: 350,
+        field: "shortUrl",
+        headerName: "Short URL",
+        width: 200,
         disableColumnMenu: true,
         editable: false,
         headerAlign: "center",
         align: "center",
-        headerClassName: "text-black font-semibold ",
-        cellClassName: "text-slate-700 font-normal  ",
-        renderHeader: () => <span className="ps-10">Note Content</span>,
-        renderCell: (params) => {
-            const contens = JSON.parse(params?.value)?.content;
-
-            const response = auditLogsTruncateTexts(contens, 50);
-
-            return <p className=" text-slate-700 text-center   ">{response}</p>;
-        },
+        headerClassName: "text-black font-semibold border",
+        cellClassName: "text-slate-700 font-normal  border",
+        renderHeader: () => <span className="ps-10">Short URL</span>,
     },
 ];
 
 const AuditLogsDetails = () => {
     //access the noteId
-    const { noteId } = useParams();
+    const { urlMappingId } = useParams();
     const [auditLogs, setAuditLogs] = useState([]);
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState(null);
@@ -100,7 +92,7 @@ const AuditLogsDetails = () => {
     const fetchSingleAuditLogs = useCallback(async () => {
         setLoading(true);
         try {
-            const { data } = await api.get(`/audit/note/${noteId}`);
+            const { data } = await api.get(`/audit/urls/${urlMappingId}`);
 
             setAuditLogs(data);
         } catch (err) {
@@ -109,30 +101,29 @@ const AuditLogsDetails = () => {
         } finally {
             setLoading(false);
         }
-    }, [noteId]);
+    }, [urlMappingId]);
 
     useEffect(() => {
-        if (noteId) {
+        if (urlMappingId) {
             fetchSingleAuditLogs();
         }
-    }, [noteId, fetchSingleAuditLogs]);
+    }, [urlMappingId, fetchSingleAuditLogs]);
 
     const rows = auditLogs.map((item) => {
         const formattedDate = moment(item.timestamp).format(
             "MMMM DD, YYYY, hh:mm A"
         );
 
-        //set the data for each rows in the table according to the field name in columns
+        //set the data for each row in the table according to the field name in columns
         //Example: username is the keyword in row it should matche with the field name in column so that the data will show on that column dynamically
 
         return {
             id: item.id,
-            noteId: item.noteId,
+            urlMappingId: item.urlMappingId,
             actions: item.action,
             username: item.username,
             timestamp: formattedDate,
-            noteid: item.noteId,
-            note: item.noteContent,
+            shortUrl: item.shortUrl,
         };
     });
 
@@ -145,28 +136,12 @@ const AuditLogsDetails = () => {
             <div className="py-6">
                 {auditLogs.length > 0 && (
                     <h1 className="text-center sm:text-2xl text-lg font-bold text-slate-800 ">
-                        Audit Log for Note ID - {noteId}
+                        Audit Log for URL Mapping ID - {urlMappingId}
                     </h1>
                 )}
             </div>
             {loading ? (
-                <>
-                    {" "}
-                    <div className="flex  flex-col justify-center items-center  h-72">
-            <span>
-              <FadeLoader
-                  height="70"
-                  width="70"
-                  color="#4fa94d"
-                  ariaLabel="blocks-loading"
-                  wrapperStyle={{}}
-                  wrapperClass="blocks-wrapper"
-                  visible={true}
-              />
-            </span>
-                        <span>Please wait...</span>
-                    </div>
-                </>
+                <Loader/>
             ) : (
                 <>
                     {auditLogs.length === 0 ? (
@@ -178,7 +153,7 @@ const AuditLogsDetails = () => {
                                 <DataGrid
                                     className="w-fit mx-auto px-0"
                                     rows={rows}
-                                    columns={auditLogscolumn}
+                                    columns={auditLogColumns}
                                     initialState={{
                                         pagination: {
                                             paginationModel: {
