@@ -5,6 +5,7 @@ import com.razorquake.razorlinks.models.Role;
 import com.razorquake.razorlinks.models.User;
 import com.razorquake.razorlinks.repository.RoleRepository;
 import com.razorquake.razorlinks.repository.UserRepository;
+import com.razorquake.razorlinks.security.config.OAuth2LoginSuccessHandler;
 import com.razorquake.razorlinks.security.jwt.AuthEntryPointJwt;
 import com.razorquake.razorlinks.security.jwt.JwtAuthenticationFilter;
 import com.razorquake.razorlinks.security.service.UserDetailsServiceImpl;
@@ -33,7 +34,7 @@ import org.springframework.security.web.csrf.CookieCsrfTokenRepository;
 public class WebSecurityConfig  {
 
     private final AuthEntryPointJwt unauthorizedHandler;
-
+    private final OAuth2LoginSuccessHandler oAuth2LoginSuccessHandler;
     private final UserDetailsServiceImpl userDetailsService;
 
     @Value("${admin.email}")
@@ -78,10 +79,14 @@ public class WebSecurityConfig  {
                         .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
                         .requestMatchers("/api/auth/public/**").permitAll()
                         .requestMatchers("/api/csrf-token").permitAll()
+                        .requestMatchers("/oauth2/**").permitAll()
                         .requestMatchers("/api/urls/**").authenticated()
                         .requestMatchers("/{shortUrl}").permitAll()
                         .anyRequest().authenticated()
                 )
+                .oauth2Login(oauth2 -> {
+                    oauth2.successHandler(oAuth2LoginSuccessHandler);
+                })
                 .exceptionHandling(exceptionHandling -> exceptionHandling.authenticationEntryPoint(unauthorizedHandler));
         httpSecurity.authenticationProvider(authenticationProvider());
         httpSecurity.addFilterBefore(jwtAuthenticationFilter(), UsernamePasswordAuthenticationFilter.class);

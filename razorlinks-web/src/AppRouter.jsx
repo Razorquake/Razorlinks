@@ -2,8 +2,8 @@ import {Toaster} from "react-hot-toast";
 import {Route, Routes} from "react-router-dom";
 import LandingPage from "./components/LandingPage.jsx";
 import AboutPage from "./components/AboutPage.jsx";
-import RegisterPage from "./components/RegisterPage.jsx";
-import LoginPage from "./components/LoginPage.jsx";
+import RegisterPage from "./components/auth/RegisterPage.jsx";
+import LoginPage from "./components/auth/LoginPage.jsx";
 import DashboardLayout from "./components/dashboard/DashboardLayout.jsx";
 import Footer from "./components/Footer.jsx";
 import ShortenUrlPage from "./components/ShortenUrlPage.jsx";
@@ -17,6 +17,7 @@ import NotFound from "./components/NotFound.jsx";
 import EmailVerificationPage from "./components/auth/EmailVerificationPage.jsx";
 import ForgotPassword from "./components/auth/ForgotPassword.jsx";
 import ResetPassword from "./components/auth/ResetPassword.jsx";
+import OAuth2RedirectHandler from "./components/auth/OAuth2RedirectHandler.jsx";
 
 const AppRouter = () => {
     const hideHeaderFooter = location.pathname.startsWith("/s");
@@ -33,8 +34,10 @@ const AppRouter = () => {
                 <Route path="/forgot-password" element={<PrivateRoute publicPage={true}><ForgotPassword/></PrivateRoute>} />
                 <Route path="/reset-password" element={<PrivateRoute publicPage={true}><ResetPassword/></PrivateRoute> }/>
                 <Route path="/verify-email" element={<PrivateRoute publicPage={true}><EmailVerificationPage /></PrivateRoute>} />
+                <Route path="/oauth2/redirect" element={<PrivateRoute publicPage={true}><OAuth2RedirectHandler /></PrivateRoute>} />
                 <Route path="/dashboard" element={ <PrivateRoute publicPage={false}><DashboardLayout /></PrivateRoute>} />
                 <Route path="/profile" element={ <PrivateRoute publicPage={false}><UserProfile /></PrivateRoute>} />
+
                 <Route path="/error" element={ <ErrorPage />} />
                 <Route path="*" element={<NotFound/>}/>
                 <Route path="/access-denied" element={<AccessDenied />} />

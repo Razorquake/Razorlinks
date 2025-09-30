@@ -1,12 +1,16 @@
 import {useState} from "react";
 import {useForm} from "react-hook-form";
-import TextField from "./TextField.jsx";
+import TextField from "../TextField.jsx";
 import {Link } from "react-router-dom";
-import api from "../services/api.js";
+import api from "../../services/api.js";
 import toast from "react-hot-toast";
-import { useEmailVerification } from '../hooks/useEmailVerification.js';
+import { useEmailVerification } from '../../hooks/useEmailVerification.js';
+import Divider from "@mui/material/Divider";
+import {FcGoogle} from "react-icons/fc";
+import {FaGithub} from "react-icons/fa";
 
 const RegisterPage = () => {
+    const apiUrl = import.meta.env.VITE_BACKEND_URL;
     const [registrationComplete, setRegistrationComplete] = useState(false);
     const [loader, setLoader] = useState(false);
     const { resendVerificationEmail, resendingEmail } = useEmailVerification();
@@ -111,10 +115,13 @@ const RegisterPage = () => {
                 onSubmit={handleSubmit(registerHandler)}
                 className="sm:w-[450px] w-[360px] shadow-custom py-8 sm:px-8 px-4 rounded-md"
             >
-                <h1 className="text-center font-serif text-btn-color font-bold lg:text-3xl text-2xl">
+                <h1 className="text-center font-montserrat font-bold lg:text-3xl text-2xl">
                     Register here
                 </h1>
-                <hr className="mt-2 mb-5 text-black"/>
+                <p className="text-slate-600 text-center">
+                    Enter your credentials to create new account
+                </p>
+                <Divider className="font-semibold pb-4"></Divider>
                 <div className="flex flex-col gap-3">
                     <TextField
                         label="Username"
@@ -154,7 +161,7 @@ const RegisterPage = () => {
                     className='bg-customRed font-semibold text-white  bg-custom-gradient w-full py-2 hover:text-slate-400 transition-colors duration-100 rounded-sm my-3'>
                     {loader ? "Loading..." : "Register"}
                 </button>
-                <p className='text-center text-sm text-slate-700 mt-6'>
+                <p className='text-center text-sm text-slate-700 mt-3 mb-3'>
                     Already have an account? {""}
                     <Link
                         className='font-semibold underline hover:text-black text-btn-color'
@@ -163,6 +170,31 @@ const RegisterPage = () => {
                         <span>Login</span>
                     </Link>
                 </p>
+                <Divider className="font-semibold">OR</Divider>
+                <div className="flex items-center justify-between gap-1 py-5 ">
+                    <Link
+                        to={`${apiUrl}/oauth2/authorization/google`}
+                        className="flex gap-1 items-center justify-center flex-1 border p-2 shadow-sm shadow-slate-200 rounded-md hover:bg-slate-300 transition-all duration-300"
+                    >
+                  <span>
+                    <FcGoogle className="text-2xl"/>
+                  </span>
+                        <span className="font-semibold sm:text-customText text-xs">
+                    Login with Google
+                  </span>
+                    </Link>
+                    <Link
+                        to={`${apiUrl}/oauth2/authorization/github`}
+                        className="flex gap-1 items-center justify-center flex-1 border p-2 shadow-sm shadow-slate-200 rounded-md hover:bg-slate-300 transition-all duration-300"
+                    >
+                  <span>
+                    <FaGithub className="text-2xl"/>
+                  </span>
+                        <span className="font-semibold sm:text-customText text-xs">
+                    Login with Github
+                  </span>
+                    </Link>
+                </div>
             </form>
         </div>
     );
