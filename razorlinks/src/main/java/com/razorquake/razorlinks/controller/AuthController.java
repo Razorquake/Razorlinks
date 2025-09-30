@@ -4,9 +4,11 @@ import com.razorquake.razorlinks.dtos.*;
 import com.razorquake.razorlinks.models.User;
 import com.razorquake.razorlinks.security.jwt.JwtAuthenticationResponse;
 import com.razorquake.razorlinks.service.EmailVerificationService;
+import com.razorquake.razorlinks.service.PasswordResetService;
 import com.razorquake.razorlinks.service.UserService;
 import jakarta.validation.Valid;
 import lombok.AllArgsConstructor;
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.GrantedAuthority;
@@ -23,11 +25,12 @@ import java.util.stream.Collectors;
 @Slf4j
 @RestController
 @RequestMapping("/api/auth")
-@AllArgsConstructor
+@RequiredArgsConstructor
 public class AuthController {
 
-    private UserService userService;
-    private EmailVerificationService emailVerificationService;
+    private final UserService userService;
+    private final EmailVerificationService emailVerificationService;
+    private final PasswordResetService passwordResetService;
 
     @PostMapping("/public/register")
     public ResponseEntity<?> registerUser(@Valid @RequestBody RegisterRequest registerRequest){
@@ -99,5 +102,17 @@ public class AuthController {
         User user = userService.loggedInUser();
         return ResponseEntity.ok().body(Map.of("is2faEnabled", user.isTwoFactorEnabled()));
 
+    }
+
+    @PostMapping("/public/forgot-password")
+    public ResponseEntity<?> forgotPassword(@RequestParam String email){
+        passwordResetService.sendPasswordResetEmail(email);
+        return ResponseEntity.ok(Map.of("message", "Password reset email sent to " + email, "status", true));
+    }
+
+    @PostMapping("/public/reset-password")
+    public ResponseEntity<?> resetPassword(@RequestBody @Valid PasswordResetRequest request){
+        passwordResetService.resetPassword(request);
+        return ResponseEntity.ok(Map.of("message", "Password has been reset successfully", "status", true));
     }
 }

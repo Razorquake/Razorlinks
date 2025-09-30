@@ -51,4 +51,28 @@ public class GlobalExceptionHandler {
         response.put("status", false);
         return new ResponseEntity<>(response, HttpStatus.BAD_REQUEST);
     }
+
+    @ExceptionHandler(EmailNotFoundException.class)
+    public ResponseEntity<Map<String, Object>> handleEmailNotFoundException(EmailNotFoundException e) {
+        Map<String, Object> response = new HashMap<>();
+        response.put("message", e.getMessage());
+        response.put("status", false);
+        return new ResponseEntity<>(response, HttpStatus.NOT_FOUND);
+    }
+
+    @ExceptionHandler(InvalidTokenException.class)
+    public ResponseEntity<Map<String, Object>> handleInvalidTokenException(InvalidTokenException e) {
+        Map<String, Object> response = new HashMap<>();
+        response.put("message", e.getMessage());
+        response.put("status", false);
+        return new ResponseEntity<>(response, HttpStatus.BAD_REQUEST);
+    }
+
+    @ExceptionHandler(SamePasswordException.class)
+    public ResponseEntity<Map<String, Object>> handleSamePasswordException(SamePasswordException e) {
+        Map<String, Object> response = new HashMap<>();
+        response.put("message", e.getMessage());
+        response.put("status", false);
+        return new ResponseEntity<>(response, HttpStatus.BAD_REQUEST);
+    }
 }

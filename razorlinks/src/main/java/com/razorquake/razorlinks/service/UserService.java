@@ -3,10 +3,7 @@ package com.razorquake.razorlinks.service;
 import com.razorquake.razorlinks.dtos.LoginRequest;
 import com.razorquake.razorlinks.dtos.RegisterRequest;
 import com.razorquake.razorlinks.dtos.UserDTO;
-import com.razorquake.razorlinks.exception.EmailAlreadyExistsException;
-import com.razorquake.razorlinks.exception.EmailVerificationException;
-import com.razorquake.razorlinks.exception.RoleNotFoundException;
-import com.razorquake.razorlinks.exception.UsernameAlreadyExistsException;
+import com.razorquake.razorlinks.exception.*;
 import com.razorquake.razorlinks.models.AppRole;
 import com.razorquake.razorlinks.models.Role;
 import com.razorquake.razorlinks.models.User;
@@ -17,7 +14,6 @@ import com.razorquake.razorlinks.security.jwt.JwtUtils;
 import com.razorquake.razorlinks.security.service.UserDetailsImpl;
 import jakarta.transaction.Transactional;
 import lombok.AllArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
@@ -34,7 +30,6 @@ import java.util.Set;
 
 @Service
 @AllArgsConstructor
-@Slf4j
 public class UserService {
     private PasswordEncoder passwordEncoder;
     private UserRepository userRepository;
@@ -45,7 +40,6 @@ public class UserService {
 
     @Transactional
     public Map<String, Object> registerUser(RegisterRequest registerRequest){
-        log.info("Registering user: {}", registerRequest);
         if(userRepository.existsByUsername(registerRequest.getUsername()))
             throw new UsernameAlreadyExistsException("Username already exists");
         if (userRepository.existsByEmail(registerRequest.getEmail()))
@@ -74,7 +68,6 @@ public class UserService {
         user.setSignUpMethod("email");
         user.setEnabled(false);
         User savedUser = userRepository.save(user);
-        log.info("Saved user: {}", savedUser);
 
         emailVerificationService.sendVerificationEmail(savedUser);
 

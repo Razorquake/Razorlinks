@@ -1,6 +1,7 @@
 package com.razorquake.razorlinks.service;
 
 import com.razorquake.razorlinks.exception.EmailVerificationException;
+import com.razorquake.razorlinks.exception.InvalidTokenException;
 import com.razorquake.razorlinks.models.EmailVerificationToken;
 import com.razorquake.razorlinks.models.User;
 import com.razorquake.razorlinks.repository.EmailVerificationTokenRepository;
@@ -9,14 +10,17 @@ import com.razorquake.razorlinks.security.jwt.JwtAuthenticationResponse;
 import com.razorquake.razorlinks.security.jwt.JwtUtils;
 import com.razorquake.razorlinks.security.service.EmailService;
 import com.razorquake.razorlinks.security.service.UserDetailsImpl;
+import jakarta.mail.MessagingException;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.scheduling.annotation.Scheduled;
+import org.springframework.security.core.GrantedAuthority;
 import org.springframework.stereotype.Service;
 
-import java.time.LocalDateTime;
+import java.time.Instant;
+import java.time.temporal.ChronoUnit;
 import java.util.List;
 import java.util.UUID;
 
@@ -35,39 +39,44 @@ public class EmailVerificationService {
 
     @Transactional
     public void sendVerificationEmail(User user) {
-        // Delete any existing tokens for this user
-        tokenRepository.findByUser(user).ifPresent(tokenRepository::delete);
-        tokenRepository.flush();
+        try {
+            // Delete any existing tokens for this user
+            tokenRepository.findByUser(user).ifPresent(tokenRepository::delete);
+            tokenRepository.flush();
 
-        // Generate new token
-        String token = UUID.randomUUID().toString();
-        LocalDateTime expiresAt = LocalDateTime.now().plusHours(24); // 24-hour expiration
+            // Generate new token
+            String token = UUID.randomUUID().toString();
+            Instant expiresAt = Instant.now().plus(24, ChronoUnit.HOURS); // 24-hour expiration
 
-        EmailVerificationToken verificationToken = new EmailVerificationToken(token, user, expiresAt);
-        tokenRepository.save(verificationToken);
+            EmailVerificationToken verificationToken = new EmailVerificationToken(token, user, expiresAt);
+            tokenRepository.save(verificationToken);
 
-        // Send verification email
-        String verificationUrl = frontendUrl + "/verify-email?token=" + token;
-        emailService.sendVerificationEmail(user.getEmail(), verificationUrl);
+            // Send verification email
+            String verificationUrl = frontendUrl + "/verify-email?token=" + token;
+            emailService.sendVerificationEmail(user.getEmail(), verificationUrl);
 
-        log.info("Verification email sent to: {}", user.getEmail());
+            log.info("Verification email sent to: {}", user.getEmail());
+        } catch (MessagingException e) {
+            log.error("Failed to send verification email to: {}", user.getEmail(), e);
+            throw new EmailVerificationException("Failed to send verification email. Please try again later.");
+        }
     }
 
     @Transactional
     public JwtAuthenticationResponse verifyEmail(String token) {
         EmailVerificationToken verificationToken = tokenRepository.findByToken(token)
-                .orElseThrow(() -> new EmailVerificationException("Invalid verification token"));
+                .orElseThrow(() -> new InvalidTokenException("Invalid verification token"));
 
         if (verificationToken.isExpired()) {
-            throw new EmailVerificationException("Verification token has expired");
+            throw new InvalidTokenException("Verification token has expired");
         }
 
         if (verificationToken.isVerified()) {
-            throw new EmailVerificationException("Email has already been verified");
+            throw new InvalidTokenException("Email has already been verified");
         }
 
         // Mark token as verified
-        verificationToken.setVerifiedAt(LocalDateTime.now());
+        verificationToken.setVerifiedAt(Instant.now());
         tokenRepository.save(verificationToken);
 
         // Enable user account
@@ -80,7 +89,7 @@ public class EmailVerificationService {
         UserDetailsImpl userDetails = UserDetailsImpl.build(savedUser);
         String jwt = jwtUtils.generateToken(userDetails);
         List<String> roles = userDetails.getAuthorities().stream()
-                .map(grantedAuthority -> grantedAuthority.getAuthority())
+                .map(GrantedAuthority::getAuthority)
                 .toList();
         return new JwtAuthenticationResponse(jwt, roles);
 
@@ -103,7 +112,7 @@ public class EmailVerificationService {
     @Scheduled(cron = "0 0 2 * * ?")
     @Transactional
     public void cleanupExpiredTokens() {
-        tokenRepository.deleteExpiredTokens(LocalDateTime.now());
-        log.info("Cleaned up expired verification tokens");
+        tokenRepository.deleteExpiredAndVerifiedTokens(Instant.now());
+        log.info("Cleaned up expired and used verification tokens");
     }
 }

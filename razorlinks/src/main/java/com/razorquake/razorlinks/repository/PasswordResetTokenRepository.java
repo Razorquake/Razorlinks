@@ -1,6 +1,6 @@
 package com.razorquake.razorlinks.repository;
 
-import com.razorquake.razorlinks.models.EmailVerificationToken;
+import com.razorquake.razorlinks.models.PasswordResetToken;
 import com.razorquake.razorlinks.models.User;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Modifying;
@@ -11,13 +11,12 @@ import java.time.Instant;
 import java.util.Optional;
 
 @Repository
-public interface EmailVerificationTokenRepository extends JpaRepository<EmailVerificationToken, Long> {
-    Optional<EmailVerificationToken> findByToken(String token);
+public interface PasswordResetTokenRepository extends JpaRepository<PasswordResetToken, Long> {
+    Optional<PasswordResetToken> findByToken(String token);
 
-    Optional<EmailVerificationToken> findByUser(User user);
+    Optional<PasswordResetToken> findByUser(User user);
 
     @Modifying
-    @Query("DELETE FROM EmailVerificationToken e WHERE e.expiresAt < :now OR e.verifiedAt IS NOT NULL")
+    @Query("DELETE FROM PasswordResetToken e WHERE e.expiresAt < :now OR e.usedAt IS NOT NULL")
     void deleteExpiredAndVerifiedTokens(Instant now);
-
 }

@@ -15,6 +15,8 @@ import Admin from "./components/auditlogs/Admin.jsx";
 import AccessDenied from "./components/auth/AccessDenied.jsx";
 import NotFound from "./components/NotFound.jsx";
 import EmailVerificationPage from "./components/auth/EmailVerificationPage.jsx";
+import ForgotPassword from "./components/auth/ForgotPassword.jsx";
+import ResetPassword from "./components/auth/ResetPassword.jsx";
 
 const AppRouter = () => {
     const hideHeaderFooter = location.pathname.startsWith("/s");
@@ -28,6 +30,8 @@ const AppRouter = () => {
                 <Route path="/s/:url" element={<ShortenUrlPage />} />
                 <Route path="/register" element={<PrivateRoute publicPage={true}><RegisterPage /></PrivateRoute>} />
                 <Route path="/login" element={<PrivateRoute publicPage={true}><LoginPage /></PrivateRoute>} />
+                <Route path="/forgot-password" element={<PrivateRoute publicPage={true}><ForgotPassword/></PrivateRoute>} />
+                <Route path="/reset-password" element={<PrivateRoute publicPage={true}><ResetPassword/></PrivateRoute> }/>
                 <Route path="/verify-email" element={<PrivateRoute publicPage={true}><EmailVerificationPage /></PrivateRoute>} />
                 <Route path="/dashboard" element={ <PrivateRoute publicPage={false}><DashboardLayout /></PrivateRoute>} />
                 <Route path="/profile" element={ <PrivateRoute publicPage={false}><UserProfile /></PrivateRoute>} />

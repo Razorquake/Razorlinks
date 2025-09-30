@@ -12,8 +12,8 @@ import java.time.Instant;
 @Getter
 @Setter
 @NoArgsConstructor
-@Table(name = "email_verification_tokens")
-public class EmailVerificationToken {
+@Table(name = "password_reset_tokens")
+public class PasswordResetToken {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -33,9 +33,9 @@ public class EmailVerificationToken {
     @Column(nullable = false)
     private Instant expiresAt;
 
-    private Instant verifiedAt;
+    private Instant usedAt;
 
-    public EmailVerificationToken(String token, User user, Instant expiresAt) {
+    public PasswordResetToken(String token, User user, Instant expiresAt) {
         this.token = token;
         this.user = user;
         this.expiresAt = expiresAt;
@@ -45,7 +45,8 @@ public class EmailVerificationToken {
         return Instant.now().isAfter(this.expiresAt);
     }
 
-    public boolean isVerified() {
-        return this.verifiedAt != null;
+    public boolean isUsed() {
+        return this.usedAt != null;
     }
 }
+
