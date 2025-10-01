@@ -1,15 +1,21 @@
 package com.razorquake.razorlinks.controller;
 
+import com.google.zxing.WriterException;
 import com.razorquake.razorlinks.dtos.ClickEventDTO;
 import com.razorquake.razorlinks.dtos.UrlMappingDTO;
 import com.razorquake.razorlinks.models.User;
+import com.razorquake.razorlinks.service.QRCodeService;
 import com.razorquake.razorlinks.service.UrlMappingService;
 import com.razorquake.razorlinks.service.UserService;
-import lombok.AllArgsConstructor;
+import lombok.RequiredArgsConstructor;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
+import java.io.IOException;
 import java.security.Principal;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
@@ -19,12 +25,13 @@ import java.util.Map;
 
 @RestController
 @RequestMapping("/api/urls")
-@AllArgsConstructor
+@RequiredArgsConstructor
 @PreAuthorize("hasAnyRole('ADMIN', 'USER')")
 public class UrlMappingController {
 
-    private UrlMappingService urlMappingService;
-    private UserService userService;
+    private final UrlMappingService urlMappingService;
+    private final UserService userService;
+    private final QRCodeService qrCodeService;
 
     @PostMapping("/shorten")
     public ResponseEntity<UrlMappingDTO> createShortUrl(
@@ -78,6 +85,24 @@ public class UrlMappingController {
         User user = userService.findByUsername(principal.getName());
         urlMappingService.deleteUrlMapping(shortUrl, user);
         return ResponseEntity.ok().build();
+    }
+
+    @GetMapping("/qr/{shortUrl}")
+    public ResponseEntity<byte[]> getQRCode(
+            @PathVariable String shortUrl,
+            @RequestParam(defaultValue = "300") int size
+    ) {
+        try {
+            byte[] qrCode = qrCodeService.generateQRCode(shortUrl, size, size);
+
+            HttpHeaders headers = new HttpHeaders();
+            headers.setContentType(MediaType.IMAGE_PNG);
+            headers.setContentLength(qrCode.length);
+
+            return new ResponseEntity<>(qrCode, headers, HttpStatus.OK);
+        } catch (WriterException | IOException e) {
+            return new ResponseEntity<>(HttpStatus.INTERNAL_SERVER_ERROR);
+        }
     }
 
 }

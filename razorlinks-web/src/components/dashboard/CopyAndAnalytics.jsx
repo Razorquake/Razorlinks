@@ -3,11 +3,13 @@ import {IoCopy, IoQrCode} from 'react-icons/io5';
 import {LiaCheckSolid} from 'react-icons/lia';
 import {MdAnalytics, MdDelete} from 'react-icons/md';
 import ConfirmationModal from "./ConfirmationModal.jsx";
+import QRCodeModal from "./QRCodeModal.jsx";
 
 const CopyAndAnalytics = ({shortUrl, analyticsHandler, onDelete}) => {
     const [isCopied, setIsCopied] = useState(false);
     const [isDeleting, setIsDeleting] = useState(false);
     const [showDeleteModal, setShowDeleteModal] = useState(false);
+    const [showQRModal, setShowQRModal] = useState(false);
 
     const handleCopyToClipboard = async () => {
         try {
@@ -42,6 +44,10 @@ const CopyAndAnalytics = ({shortUrl, analyticsHandler, onDelete}) => {
         }
     };
 
+    const handleQRClick = () => {
+        setShowQRModal(true);
+    };
+
     return (
         <>
             <div className="flex flex-1 sm:justify-end items-center gap-4">
@@ -67,8 +73,7 @@ const CopyAndAnalytics = ({shortUrl, analyticsHandler, onDelete}) => {
                 </div>
                 <div className="flex gap-4 flex-col">
                     <div
-                        onClick={() => {
-                        }}
+                        onClick={handleQRClick}
                         className="flex cursor-pointer gap-1 items-center bg-green-700 py-2 font-semibold shadow-md shadow-slate-500 px-6 rounded-md text-white "
                     >
                         <button>QR Code</button>
@@ -93,6 +98,11 @@ const CopyAndAnalytics = ({shortUrl, analyticsHandler, onDelete}) => {
                 title="Delete Short URL"
                 message="Are you sure you want to delete this short URL? This action cannot be undone."
                 isLoading={isDeleting}
+            />
+            <QRCodeModal
+                open={showQRModal}
+                onClose={() => setShowQRModal(false)}
+                shortUrl={shortUrl}
             />
         </>
     );
