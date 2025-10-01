@@ -14,7 +14,6 @@ import {FaGithub} from "react-icons/fa";
 const LoginPage = () => {
     // Step 1: Login method and Step 2: Verify 2FA
     const apiUrl = import.meta.env.VITE_BACKEND_URL;
-    console.log(apiUrl);
     const {resendVerificationEmail, resendingEmail} = useEmailVerification();
     const [step, setStep] = useState(1);
     const [jwtToken, setJwtToken] = useState("");
@@ -23,10 +22,16 @@ const LoginPage = () => {
     const {setToken} = useStoreContext();
 
     const {
-        register, handleSubmit, reset, formState: {errors}
+        register,
+        handleSubmit,
+        reset,
+        formState: {errors}
     } = useForm({
         defaultValues: {
-            username: "", email: "", password: "", code: "",
+            username: "",
+            email: "",
+            password: "",
+            code: "",
         }, mode: "onTouched",
     });
 
@@ -68,12 +73,14 @@ const LoginPage = () => {
         setLoader(true);
         try {
             const response = await api.post("/auth/public/login", data);
-            //showing success message with react hot toast
+            //showing success message with React hot toast
             toast.success("Login Successful");
             if (response.status === 200 && response.data.token) {
                 setJwtToken(response.data.token);
                 const decodedToken = jwtDecode(response.data.token);
+                console.log(decodedToken);
                 if (decodedToken.is2faEnabled) {
+
                     setStep(2); // Move to 2FA verification step
                 } else {
                     handleSuccessfulLogin(response.data.token, decodedToken);

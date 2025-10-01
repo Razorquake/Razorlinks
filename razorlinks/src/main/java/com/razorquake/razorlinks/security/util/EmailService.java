@@ -1,4 +1,4 @@
-package com.razorquake.razorlinks.security.service;
+package com.razorquake.razorlinks.security.util;
 
 import jakarta.mail.MessagingException;
 import jakarta.mail.internet.MimeMessage;

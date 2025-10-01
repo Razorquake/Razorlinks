@@ -31,6 +31,8 @@ out/
 /nbbuild/
 /dist/
 /nbdist/
+.env
+.env.prod
 /.nb-gradle/
 
 ### VS Code ###

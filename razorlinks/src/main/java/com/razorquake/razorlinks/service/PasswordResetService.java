@@ -8,7 +8,7 @@ import com.razorquake.razorlinks.models.PasswordResetToken;
 import com.razorquake.razorlinks.models.User;
 import com.razorquake.razorlinks.repository.PasswordResetTokenRepository;
 import com.razorquake.razorlinks.repository.UserRepository;
-import com.razorquake.razorlinks.security.service.EmailService;
+import com.razorquake.razorlinks.security.util.EmailService;
 import jakarta.mail.MessagingException;
 import jakarta.transaction.Transactional;
 import jakarta.validation.Valid;
