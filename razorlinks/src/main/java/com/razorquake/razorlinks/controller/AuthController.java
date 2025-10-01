@@ -3,13 +3,16 @@ package com.razorquake.razorlinks.controller;
 import com.razorquake.razorlinks.dtos.*;
 import com.razorquake.razorlinks.models.User;
 import com.razorquake.razorlinks.security.jwt.JwtAuthenticationResponse;
+import com.razorquake.razorlinks.security.jwt.JwtUtils;
 import com.razorquake.razorlinks.service.EmailVerificationService;
 import com.razorquake.razorlinks.service.PasswordResetService;
+import com.razorquake.razorlinks.service.TotpService;
 import com.razorquake.razorlinks.service.UserService;
+import com.warrenstrange.googleauth.GoogleAuthenticatorKey;
 import jakarta.validation.Valid;
-import lombok.AllArgsConstructor;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
@@ -31,6 +34,8 @@ public class AuthController {
     private final UserService userService;
     private final EmailVerificationService emailVerificationService;
     private final PasswordResetService passwordResetService;
+    private final JwtUtils jwtUtils;
+    private final TotpService totpService;
 
     @PostMapping("/public/register")
     public ResponseEntity<?> registerUser(@Valid @RequestBody RegisterRequest registerRequest){
@@ -97,13 +102,6 @@ public class AuthController {
         return ResponseEntity.ok(principal.getName());
     }
 
-    @GetMapping("/user/2fa-status")
-    public ResponseEntity<?> get2FAStatus() {
-        User user = userService.loggedInUser();
-        return ResponseEntity.ok().body(Map.of("is2faEnabled", user.isTwoFactorEnabled()));
-
-    }
-
     @PostMapping("/public/forgot-password")
     public ResponseEntity<?> forgotPassword(@RequestParam String email){
         passwordResetService.sendPasswordResetEmail(email);
@@ -114,5 +112,63 @@ public class AuthController {
     public ResponseEntity<?> resetPassword(@RequestBody @Valid PasswordResetRequest request){
         passwordResetService.resetPassword(request);
         return ResponseEntity.ok(Map.of("message", "Password has been reset successfully", "status", true));
+    }
+
+    // 2FA Authentication
+    @PostMapping("/enable-2fa")
+    public ResponseEntity<String> enable2FA() {
+        Long userId = userService.loggedInUser().getId();
+        GoogleAuthenticatorKey secret = userService.generate2FASecret(userId);
+        String qrCodeUrl = totpService.getQrCodeUrl(secret,
+                userService.getUserById(userId).getUserName());
+        return ResponseEntity.ok(qrCodeUrl);
+    }
+
+    @PostMapping("/disable-2fa")
+    public ResponseEntity<String> disable2FA() {
+        Long userId = userService.loggedInUser().getId();
+        userService.disable2FA(userId);
+        return ResponseEntity.ok("2FA disabled");
+    }
+
+
+    @PostMapping("/verify-2fa")
+    public ResponseEntity<String> verify2FA(@RequestParam int code) {
+        Long userId = userService.loggedInUser().getId();
+        boolean isValid = userService.validate2FACode(userId, code);
+        if (isValid) {
+            userService.enable2FA(userId);
+            return ResponseEntity.ok("2FA Verified");
+        } else {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
+                    .body("Invalid 2FA Code");
+        }
+    }
+
+
+    @GetMapping("/user/2fa-status")
+    public ResponseEntity<?> get2FAStatus() {
+        User user = userService.loggedInUser();
+        if (user != null){
+            return ResponseEntity.ok().body(Map.of("is2faEnabled", user.isTwoFactorEnabled()));
+        } else {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND)
+                    .body("User not found");
+        }
+    }
+
+
+    @PostMapping("/public/verify-2fa-login")
+    public ResponseEntity<String> verify2FALogin(@RequestParam int code,
+                                                 @RequestParam String jwtToken) {
+        String username = jwtUtils.getUserNameFromJwtToken(jwtToken);
+        User user = userService.findByUsername(username);
+        boolean isValid = userService.validate2FACode(user.getId(), code);
+        if (isValid) {
+            return ResponseEntity.ok("2FA Verified");
+        } else {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
+                    .body("Invalid 2FA Code");
+        }
     }
 }
