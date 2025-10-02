@@ -1,4 +1,4 @@
-import React, {useContext} from 'react';
+import React from 'react';
 import Card from "./Card.jsx";
 import { motion } from "framer-motion";
 import {useNavigate} from "react-router-dom";
@@ -8,10 +8,7 @@ import {useStoreContext} from "../store/ContextApi.jsx";
 const LandingPage = () => {
     const navigate = useNavigate();
     const {token} = useStoreContext();
-    console.log(token)
-    const dashBoardNavigateHandler = () => {
 
-    };
     return (
         <div className="min-h-[calc(100vh-64px)]  lg:px-14 sm:px-8 px-4">
             <div className="lg:flex-row flex-col    lg:py-5   pt-16   lg:gap-10 gap-8 flex justify-between items-center">
@@ -35,32 +32,66 @@ const LandingPage = () => {
                         seconds. Simplify your sharing experience with Razorlinks today.
                     </p>
                     <div className="flex items-center gap-3">
-                        <motion.button
-                            initial={{ opacity: 0, y: 80 }}
-                            whileInView={{
-                                opacity: 1,
-                                y: 0,
-                            }}
-                            viewport={{ once: true }}
-                            transition={{ duration: 0.8 }}
-                            onClick={dashBoardNavigateHandler}
-                            className="bg-custom-gradient  w-40 text-white rounded-md  py-2"
-                        >
-                            Manage Links
-                        </motion.button>
-                        <motion.button
-                            initial={{ opacity: 0, y: 80 }}
-                            whileInView={{
-                                opacity: 1,
-                                y: 0,
-                            }}
-                            viewport={{ once: true }}
-                            transition={{ duration: 0.8 }}
-                            onClick={dashBoardNavigateHandler}
-                            className="border-btnColor border w-40 text-btnColor rounded-md  py-2 "
-                        >
-                            Create Short Link
-                        </motion.button>
+                        {token ? (
+                            <>
+                                <motion.button
+                                    initial={{ opacity: 0, y: 80 }}
+                                    whileInView={{
+                                        opacity: 1,
+                                        y: 0,
+                                    }}
+                                    viewport={{ once: true }}
+                                    transition={{ duration: 0.8 }}
+                                    onClick={() => navigate("/dashboard")}
+                                    className="bg-custom-gradient  w-40 text-white rounded-md  py-2 cursor-pointer"
+                                >
+                                    Go to Dashboard
+                                </motion.button>
+                                <motion.button
+                                    initial={{ opacity: 0, y: 80 }}
+                                    whileInView={{
+                                        opacity: 1,
+                                        y: 0,
+                                    }}
+                                    viewport={{ once: true }}
+                                    transition={{ duration: 0.8 }}
+                                    onClick={() => navigate("/profile")}
+                                    className="border-btnColor border w-40 text-btnColor rounded-md  py-2 cursor-pointer"
+                                >
+                                    Go to Profile
+                                </motion.button>
+                            </>
+                        ) :(
+                            <>
+                                <motion.button
+                                    initial={{ opacity: 0, y: 80 }}
+                                    whileInView={{
+                                        opacity: 1,
+                                        y: 0,
+                                    }}
+                                    viewport={{ once: true }}
+                                    transition={{ duration: 0.8 }}
+                                    onClick={() => navigate("/login")}
+                                    className="bg-custom-gradient  w-40 text-white rounded-md  py-2 cursor-pointer"
+                                >
+                                    LogIn
+                                </motion.button>
+                                <motion.button
+                                    initial={{ opacity: 0, y: 80 }}
+                                    whileInView={{
+                                        opacity: 1,
+                                        y: 0,
+                                    }}
+                                    viewport={{ once: true }}
+                                    transition={{ duration: 0.8 }}
+                                    onClick={() => navigate("/register")}
+                                    className="border-btnColor border w-40 text-btnColor rounded-md  py-2 cursor-pointer"
+                                >
+                                    SignUp
+                                </motion.button>
+                            </>
+                        )}
+
                     </div>
                 </div>
                 <div className="   flex-1 flex   justify-center w-full">
