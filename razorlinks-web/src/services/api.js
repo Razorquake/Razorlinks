@@ -1,4 +1,5 @@
 import axios from "axios";
+import toast from "react-hot-toast";
 
 // export default axios.create({
 //     baseURL: import.meta.env.VITE_BACKEND_URL,
@@ -22,28 +23,23 @@ api.interceptors.request.use(
         if (token) {
             config.headers.Authorization = `Bearer ${token}`;
         }
-
-        let csrfToken = localStorage.getItem("CSRF_TOKEN");
-        if (!csrfToken) {
-            try {
-                const response = await axios.get(
-                    `${import.meta.env.VITE_BACKEND_URL}/api/csrf-token`,
-                    { withCredentials: true }
-                );
-                csrfToken = response.data.token;
-                localStorage.setItem("CSRF_TOKEN", csrfToken);
-            } catch (error) {
-                console.error("Failed to fetch CSRF token", error);
-            }
-        }
-
-        if (csrfToken) {
-            config.headers["X-XSRF-TOKEN"] = csrfToken;
-        }
-        console.log("X-XSRF-TOKEN " + csrfToken);
         return config;
     },
     (error) => {
+        return Promise.reject(error);
+    }
+);
+
+api.interceptors.response.use(
+    (response) => response,
+    (error) => {
+        if (error.response && error.response.status === 401) {
+            localStorage.removeItem("JWT_TOKEN");
+            localStorage.removeItem("USER");
+            localStorage.removeItem("IS_ADMIN");
+            window.location.href = "/login";
+            toast.error("Session expired. Please log in again.");
+        }
         return Promise.reject(error);
     }
 );
