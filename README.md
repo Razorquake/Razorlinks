@@ -2,16 +2,16 @@
 
 <div align="center">
 
-![Razorlinks Logo](razorlinks-web/public/images/img.svg)
+<img src="razorlinks-web/public/images/img.svg" alt="Razorlinks Logo" style="width: 400px; height: auto;" />
 
 **A modern, full-stack URL shortening service with powerful analytics and QR code generation**
 
-[![Live Demo](https://img.shields.io/badge/Live-razorlinks.dev-blue?style=for-the-badge)](https://razorlinks.dev)
-[![Java](https://img.shields.io/badge/Java-17-orange?style=for-the-badge&logo=openjdk)](https://www.oracle.com/java/)
-[![Node.js](https://img.shields.io/badge/Node.js-22.14.0-green?style=for-the-badge&logo=node.js)](https://nodejs.org/)
-[![Spring Boot](https://img.shields.io/badge/Spring%20Boot-3.x-brightgreen?style=for-the-badge&logo=spring)](https://spring.io/projects/spring-boot)
-[![React](https://img.shields.io/badge/React-18.x-61DAFB?style=for-the-badge&logo=react)](https://reactjs.org/)
-[![Hacktoberfest](https://img.shields.io/badge/Hacktoberfest-Accepted-ff69b4?style=for-the-badge)](https://hacktoberfest.com/)
+[![Live Demo](https://img.shields.io/badge/Live-razorlinks.dev-blue)](https://razorlinks.dev)
+[![Java](https://img.shields.io/badge/Java-17-orange?logo=openjdk)](https://www.oracle.com/java/)
+[![Node.js](https://img.shields.io/badge/Node.js-22.14.0-green?logo=node.js)](https://nodejs.org/)
+[![Spring Boot](https://img.shields.io/badge/Spring%20Boot-3.x-brightgreen?logo=spring)](https://spring.io/projects/spring-boot)
+[![React](https://img.shields.io/badge/React-18.x-61DAFB?logo=react)](https://reactjs.org/)
+[![Hacktoberfest](https://img.shields.io/badge/Hacktoberfest-Accepted-ff69b4)](https://hacktoberfest.com/)
 [![Deploy Backend to Elastic Beanstalk](https://github.com/Razorquake/Razorlinks/actions/workflows/deploy-backend.yml/badge.svg)](https://github.com/Razorquake/Razorlinks/actions/workflows/deploy-backend.yml)
 
 </div>
