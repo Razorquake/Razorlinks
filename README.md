@@ -12,6 +12,7 @@
 [![Spring Boot](https://img.shields.io/badge/Spring%20Boot-3.x-brightgreen?style=for-the-badge&logo=spring)](https://spring.io/projects/spring-boot)
 [![React](https://img.shields.io/badge/React-18.x-61DAFB?style=for-the-badge&logo=react)](https://reactjs.org/)
 [![Hacktoberfest](https://img.shields.io/badge/Hacktoberfest-Accepted-ff69b4?style=for-the-badge)](https://hacktoberfest.com/)
+[![Deploy Backend to Elastic Beanstalk](https://github.com/Razorquake/Razorlinks/actions/workflows/deploy-backend.yml/badge.svg)](https://github.com/Razorquake/Razorlinks/actions/workflows/deploy-backend.yml)
 
 </div>
 
