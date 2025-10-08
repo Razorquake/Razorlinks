@@ -6,7 +6,7 @@
 
 **A modern, full-stack URL shortening service with powerful analytics and QR code generation**
 
-[![Live Demo](https://img.shields.io/badge/Live-razorlinks.dev-blue)](https://razorlinks.dev)
+[![Live Demo](https://custom-icon-badges.demolab.com/badge/Live%20Demo-razorlinks.dev-FF9900?logo=aws&logoColor=white)](https://razorlinks.dev)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://github.com/Razorquake/Razorlinks/blob/master/LICENSE)
 [![Java](https://img.shields.io/badge/Java-17-orange?logo=openjdk)](https://www.oracle.com/java/)
 [![Node.js](https://img.shields.io/badge/Node.js-22.14.0-green?logo=node.js)](https://nodejs.org/)
