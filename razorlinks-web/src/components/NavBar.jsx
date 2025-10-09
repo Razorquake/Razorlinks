@@ -18,7 +18,6 @@ const Navbar = () => {
         setIsAdmin(false);
         localStorage.removeItem("JWT_TOKEN");
         localStorage.removeItem("USER"); // Remove user details as well
-        localStorage.removeItem("CSRF_TOKEN");
         localStorage.removeItem("IS_ADMIN");
         navigate("/login");
     };

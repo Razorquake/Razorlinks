@@ -1,18 +1,51 @@
-import React, {useState} from 'react';
+import React, {useEffect, useState} from 'react';
 import toast from "react-hot-toast";
 import {Modal} from "@mui/material";
 import {MdDownload} from "react-icons/md";
 import {RxCross2} from "react-icons/rx";
+import api from "../../services/api.js";
 
 const QrCodeModal = ({ open, onClose, shortUrl }) => {
     const [isLoading, setIsLoading] = useState(true);
-    const qrCodeUrl = `${import.meta.env.VITE_BACKEND_URL}/api/urls/qr/${shortUrl}?size=400`;
+    const [qrCodeBlobUrl, setQrCodeBlobUrl] = useState(null);
+
+    // Fetch QR code with authentication
+    useEffect(() => {
+        if (open && shortUrl) {
+            fetchQRCode();
+        }
+
+        // Cleanup blob URL when modal closes
+        return () => {
+            if (qrCodeBlobUrl) {
+                URL.revokeObjectURL(qrCodeBlobUrl);
+            }
+        };
+    }, [open, shortUrl]);
+
+    const fetchQRCode = async () => {
+        setIsLoading(true);
+        try {
+            const response = await api.get(`/urls/qr/${shortUrl}?size=400`, {
+                responseType: 'blob'
+            });
+
+            const blobUrl = URL.createObjectURL(response.data);
+            setQrCodeBlobUrl(blobUrl);
+            setIsLoading(false);
+        } catch (error) {
+            console.error('Error fetching QR code:', error);
+            toast.error("Failed to load QR code");
+            setIsLoading(false);
+        }
+    };
 
     const handleDownload = async () => {
         try {
-            const response = await fetch(qrCodeUrl);
-            const blob = await response.blob();
-            const url = window.URL.createObjectURL(blob);
+            const response = await api.get(`/urls/qr/${shortUrl}?size=400`, {
+                responseType: 'blob'
+            });
+            const url = window.URL.createObjectURL(response.data);
             const link = document.createElement('a');
             link.href = url;
             link.download = `qr-code-${shortUrl}.png`;
@@ -82,7 +115,7 @@ const QrCodeModal = ({ open, onClose, shortUrl }) => {
                                 </div>
                             )}
                             <img
-                                src={qrCodeUrl}
+                                src={qrCodeBlobUrl}
                                 alt="QR Code"
                                 className="w-80 h-80"
                                 onLoad={() => setIsLoading(false)}
