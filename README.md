@@ -6,10 +6,11 @@
 
 **A modern, full-stack URL shortening service with powerful analytics and QR code generation**
 
-[![Live Demo](https://img.shields.io/badge/Live-razorlinks.dev-blue)](https://razorlinks.dev)
+[![Live Demo](https://custom-icon-badges.demolab.com/badge/Live%20Demo-razorlinks.dev-FF9900?logo=aws&logoColor=white)](https://razorlinks.dev)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://github.com/Razorquake/Razorlinks/blob/master/LICENSE)
 [![Java](https://img.shields.io/badge/Java-17-orange?logo=openjdk)](https://www.oracle.com/java/)
 [![Node.js](https://img.shields.io/badge/Node.js-22.14.0-green?logo=node.js)](https://nodejs.org/)
-[![Spring Boot](https://img.shields.io/badge/Spring%20Boot-3.x-brightgreen?logo=spring)](https://spring.io/projects/spring-boot)
+[![Spring Boot](https://img.shields.io/badge/Spring%20Boot-3.x-brightgreen?logo=spring-boot)](https://spring.io/projects/spring-boot)
 [![React](https://img.shields.io/badge/React-18.x-61DAFB?logo=react)](https://reactjs.org/)
 [![Hacktoberfest](https://img.shields.io/badge/Hacktoberfest-Accepted-ff69b4)](https://hacktoberfest.com/)
 [![Deploy Backend to Elastic Beanstalk](https://github.com/Razorquake/Razorlinks/actions/workflows/deploy-backend.yml/badge.svg)](https://github.com/Razorquake/Razorlinks/actions/workflows/deploy-backend.yml)
@@ -326,7 +327,17 @@ The application supports intelligent subdomain routing:
 
 ## 📜 License
 
-This project is open source and available for contribution during Hacktoberfest.
+This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
+
+### MIT License Summary
+
+Copyright (c) 2025 Anant Jaiswal
+
+Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation files (the "Software"), to deal in the Software without restriction, including without limitation the rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to permit persons to whom the Software is furnished to do so, subject to the following conditions:
+
+The above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED.
 
 ---
 
