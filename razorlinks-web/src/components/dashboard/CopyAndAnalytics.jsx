@@ -14,7 +14,7 @@ const CopyAndAnalytics = ({shortUrl, analyticsHandler, onDelete}) => {
     const handleCopyToClipboard = async () => {
         try {
             await navigator.clipboard.writeText(
-                `${import.meta.env.VITE_REACT_FRONT_END_URL}/s/${shortUrl}`
+                `${import.meta.env.VITE_REACT_SUBDOMAIN}/${shortUrl}`
             );
             setIsCopied(true);
             setTimeout(() => setIsCopied(false), 2000); // Reset after 2 seconds

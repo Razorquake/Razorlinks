@@ -20,15 +20,14 @@ import ResetPassword from "./components/auth/ResetPassword.jsx";
 import OAuth2RedirectHandler from "./components/auth/OAuth2RedirectHandler.jsx";
 
 const AppRouter = () => {
-    const hideHeaderFooter = location.pathname.startsWith("/s");
+    //const hideHeaderFooter = location.pathname.startsWith("/s");
     return (
         <>
-            {!hideHeaderFooter && <Navbar/>}
             <Toaster position='bottom-center'/>
             <Routes>
                 <Route path='/' element={<LandingPage/>}/>
                 <Route path='/about' element={<AboutPage/>}/>
-                <Route path="/s/:url" element={<ShortenUrlPage />} />
+                {/*<Route path="/s/:url" element={<ShortenUrlPage />} />*/}
                 <Route path="/register" element={<PrivateRoute publicPage={true}><RegisterPage /></PrivateRoute>} />
                 <Route path="/login" element={<PrivateRoute publicPage={true}><LoginPage /></PrivateRoute>} />
                 <Route path="/forgot-password" element={<PrivateRoute publicPage={true}><ForgotPassword/></PrivateRoute>} />
@@ -50,7 +49,8 @@ const AppRouter = () => {
                     }
                 />
             </Routes>
-            {!hideHeaderFooter && <Footer/>}
+            {/*{!hideHeaderFooter && <Navbar/>}*/}
+            {/*{!hideHeaderFooter && <Footer/>}*/}
         </>
     );
 }

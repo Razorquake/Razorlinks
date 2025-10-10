@@ -61,7 +61,7 @@ const QrCodeModal = ({ open, onClose, shortUrl }) => {
     };
 
     const handleShare = async () => {
-        const fullUrl = `${import.meta.env.VITE_REACT_FRONT_END_URL}/s/${shortUrl}`;
+        const fullUrl = `${import.meta.env.VITE_REACT_SUBDOMAIN}/${shortUrl}`;
 
         if (navigator.share) {
             try {
@@ -129,7 +129,7 @@ const QrCodeModal = ({ open, onClose, shortUrl }) => {
                         <div className="text-center mb-4">
                             <p className="text-sm text-slate-600 mb-1">Scan to visit:</p>
                             <p className="text-sm font-mono text-blue-600 break-all px-4">
-                                {import.meta.env.VITE_REACT_FRONT_END_URL}/s/{shortUrl}
+                                ${import.meta.env.VITE_REACT_SUBDOMAIN}/${shortUrl}
                             </p>
                         </div>
 

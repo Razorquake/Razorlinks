@@ -20,12 +20,12 @@ import java.util.Map;
 @RequiredArgsConstructor
 public class QRCodeService {
 
-    @Value("${frontend.url}")
-    private String frontendUrl;
+    @Value("${subdomain.url}")
+    private String subdomainUrl;
 
     public byte[] generateQRCode(String shortUrl, int width, int height)
             throws WriterException, IOException {
-        String fullUrl = frontendUrl + "/s/" + shortUrl;
+        String fullUrl = subdomainUrl + "/" + shortUrl;
 
         QRCodeWriter qrCodeWriter = new QRCodeWriter();
         Map<EncodeHintType, Object> hints = new HashMap<>();
