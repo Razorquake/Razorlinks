@@ -37,7 +37,7 @@ const ShortenItem = ({originalUrl, shortUrl, clickCount, createDate, onUrlDelete
         setLoader(true);
         try {
             const { data } = await api.get(`/urls/analytics/${selectedUrl}?startDate=2024-12-01T00:00:00&endDate=2025-12-31T23:59:59`);
-            setAnalyticsData(data);
+            setAnalyticsData(data.reverse());
             setSelectedUrl("");
             console.log(data);
         } catch (error) {

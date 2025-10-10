@@ -26,7 +26,7 @@ export const useFetchTotalClicks = () => {
                 return Object.keys(data.data).map((key) => ({
                     clickDate: key,
                     count: data.data[key],
-                }));
+                })).reverse();
 
             },
             staleTime: 5000
