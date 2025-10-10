@@ -23,6 +23,7 @@ const AppRouter = () => {
     //const hideHeaderFooter = location.pathname.startsWith("/s");
     return (
         <>
+            <Navbar/>
             <Toaster position='bottom-center'/>
             <Routes>
                 <Route path='/' element={<LandingPage/>}/>
@@ -49,6 +50,7 @@ const AppRouter = () => {
                     }
                 />
             </Routes>
+            <Footer/>
             {/*{!hideHeaderFooter && <Navbar/>}*/}
             {/*{!hideHeaderFooter && <Footer/>}*/}
         </>
