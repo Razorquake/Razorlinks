@@ -9,7 +9,6 @@ import com.razorquake.razorlinks.models.User;
 import com.razorquake.razorlinks.repository.PasswordResetTokenRepository;
 import com.razorquake.razorlinks.repository.UserRepository;
 import com.razorquake.razorlinks.security.util.EmailService;
-import jakarta.mail.MessagingException;
 import jakarta.transaction.Transactional;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -40,25 +39,20 @@ public class PasswordResetService {
             if (!user.isEnabled()) {
                 throw new EmailVerificationException("Please verify your email address before logging in. Check your email for verification link.");
             }
-            try {
-                // Delete any existing tokens for this user
-                tokenRepository.findByUser(user).ifPresent(tokenRepository::delete);
-                tokenRepository.flush();
+            // Delete any existing tokens for this user
+            tokenRepository.findByUser(user).ifPresent(tokenRepository::delete);
+            tokenRepository.flush();
 
-                // Generate new token
-                String token = java.util.UUID.randomUUID().toString();
-                Instant expiresAt = Instant.now().plus(1, java.time.temporal.ChronoUnit.HOURS); // 1-hour expiration
+            // Generate new token
+            String token = java.util.UUID.randomUUID().toString();
+            Instant expiresAt = Instant.now().plus(1, java.time.temporal.ChronoUnit.HOURS); // 1-hour expiration
 
-                PasswordResetToken resetToken = new PasswordResetToken(token, user, expiresAt);
-                tokenRepository.save(resetToken);
+            PasswordResetToken resetToken = new PasswordResetToken(token, user, expiresAt);
+            tokenRepository.save(resetToken);
 
-                // Send password reset email
-                String resetUrl = frontendUrl + "/reset-password?token=" + token;
-                emailService.sendPasswordResetEmail(user.getEmail(), resetUrl);
-            } catch (MessagingException e) {
-                log.error("Failed to send password reset email to: {}", user.getEmail(), e);
-                throw new EmailVerificationException("Failed to send password reset email. Please try again later.");
-            }
+            // Send password reset email
+            String resetUrl = frontendUrl + "/reset-password?token=" + token;
+            emailService.sendPasswordResetEmail(user.getEmail(), user.getUsername(), resetUrl);
         });
     }
 

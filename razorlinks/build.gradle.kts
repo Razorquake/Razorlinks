@@ -43,6 +43,8 @@ dependencies {
     implementation("com.warrenstrange:googleauth:1.4.0")
     implementation("com.google.zxing:core:3.5.3")
     implementation("com.google.zxing:javase:3.5.3")
+    implementation("gg.jte:jte:3.2.1")
+    implementation("gg.jte:jte-spring-boot-starter-3:3.2.1")
 }
 
 tasks.withType<Test> {
