@@ -17,14 +17,14 @@ public class JteConfiguration {
 
     @Bean
     public TemplateEngine templateEngine() {
-        // For development - hot reload
+        // For development - hot reload templates from src/main/jte
         if ("dev".equals(activeProfile) || "local".equals(activeProfile)) {
             Path templatePath = Path.of("src", "main", "jte");
             DirectoryCodeResolver codeResolver = new DirectoryCodeResolver(templatePath);
             return TemplateEngine.create(codeResolver, ContentType.Html);
         }
 
-        // For production - precompiled templates
+        // For production - use precompiled templates from classpath
         return TemplateEngine.createPrecompiled(ContentType.Html);
     }
 
