@@ -10,7 +10,6 @@ import com.razorquake.razorlinks.security.jwt.JwtAuthenticationResponse;
 import com.razorquake.razorlinks.security.jwt.JwtUtils;
 import com.razorquake.razorlinks.security.service.UserDetailsImpl;
 import com.razorquake.razorlinks.security.util.EmailService;
-import jakarta.mail.MessagingException;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -39,27 +38,22 @@ public class EmailVerificationService {
 
     @Transactional
     public void sendVerificationEmail(User user) {
-        try {
-            // Delete any existing tokens for this user
-            tokenRepository.findByUser(user).ifPresent(tokenRepository::delete);
-            tokenRepository.flush();
+        // Delete any existing tokens for this user
+        tokenRepository.findByUser(user).ifPresent(tokenRepository::delete);
+        tokenRepository.flush();
 
-            // Generate new token
-            String token = UUID.randomUUID().toString();
-            Instant expiresAt = Instant.now().plus(24, ChronoUnit.HOURS); // 24-hour expiration
+        // Generate new token
+        String token = UUID.randomUUID().toString();
+        Instant expiresAt = Instant.now().plus(24, ChronoUnit.HOURS); // 24-hour expiration
 
-            EmailVerificationToken verificationToken = new EmailVerificationToken(token, user, expiresAt);
-            tokenRepository.save(verificationToken);
+        EmailVerificationToken verificationToken = new EmailVerificationToken(token, user, expiresAt);
+        tokenRepository.save(verificationToken);
 
-            // Send verification email
-            String verificationUrl = frontendUrl + "/verify-email?token=" + token;
-            emailService.sendVerificationEmail(user.getEmail(), verificationUrl);
+        // Send verification email
+        String verificationUrl = frontendUrl + "/verify-email?token=" + token;
+        emailService.sendVerificationEmail(user.getEmail(), user.getUsername(), verificationUrl);
 
-            log.info("Verification email sent to: {}", user.getEmail());
-        } catch (MessagingException e) {
-            log.error("Failed to send verification email to: {}", user.getEmail(), e);
-            throw new EmailVerificationException("Failed to send verification email. Please try again later.");
-        }
+        log.info("Verification email sent to: {}", user.getEmail());
     }
 
     @Transactional
