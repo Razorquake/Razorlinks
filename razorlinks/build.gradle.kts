@@ -52,31 +52,22 @@ dependencies {
 jte {
     // Generate templates to build/jte-classes
     generate()
-
     // Source directory for templates
     sourceDirectory = file("src/main/jte").toPath()
-
     // Where to generate compiled templates
     targetDirectory = file("build/jte-classes").toPath()
-
     // Content type
     contentType = gg.jte.ContentType.Html
-
 }
 
-// Make sure JTE templates are compiled before building
-tasks.named("compileJava") {
-    dependsOn("precompileJte")
+// Make sure JTE templates are generated before processing resources
+tasks.named("processResources") {
+    dependsOn("generateJte")
 }
 
-// Include compiled templates in the JAR
-tasks.named<Jar>("jar") {
-    from("build/jte-classes") {
-        into("jte-classes")
-    }
-}
-
+// Include compiled templates in the BootJar
 tasks.named<org.springframework.boot.gradle.tasks.bundling.BootJar>("bootJar") {
+    dependsOn("generateJte")
     from("build/jte-classes") {
         into("BOOT-INF/classes/jte-classes")
     }
