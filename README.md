@@ -43,8 +43,8 @@ Razorlinks simplifies URL shortening for efficient sharing. Easily generate, man
 
 ### 👥 User Management
 - **User Authentication** - Secure login and registration system with Spring Security
-- **Email Verification** - Verify user accounts via email
-- **Password Reset** - Secure password recovery functionality
+- **Email Verification** - Verify user accounts via email with beautiful templates powered by jte
+- **Password Reset** - Secure password recovery functionality with email notifications
 - **Admin Dashboard** - Comprehensive admin panel for user and link management
 - **Audit Logs** - Track user activities and system events
 
@@ -67,6 +67,7 @@ Razorlinks simplifies URL shortening for efficient sharing. Easily generate, man
 - **Database:** PostgreSQL (via Spring Data JPA)
 - **Task Scheduling:** Spring Scheduling (`@EnableScheduling`)
 - **Build Tool:** Gradle
+- **Email Templates:** jte (Java Template Engine)
 
 #### Frontend
 - **Runtime:** Node.js 22.14.0
