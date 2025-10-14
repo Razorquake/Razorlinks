@@ -39,7 +39,12 @@ public class EmailService {
 
     private String renderTemplate(String templatePath, Map<String, Object> params) {
         StringOutput output = new StringOutput();
-        templateEngine.render(templatePath, params, output);
+        try {
+            templateEngine.render(templatePath, params, output);
+        } catch (Exception e) {
+            log.error("Failed to render template: {}", templatePath, e);
+            throw new EmailVerificationException("Failed to generate email content. Please try again later.");
+        }
         return output.toString();
     }
 
@@ -52,7 +57,8 @@ public class EmailService {
             String htmlContent = renderTemplate("emails/email-verification.jte", params);
             sendEmail(to, "Email Verification - RazorLinks", htmlContent);
         } catch (MessagingException e) {
-            throw new RuntimeException(e);
+            log.error("Failed to send verification email to: {}", to, e);
+            throw new EmailVerificationException("Failed to send verification email. Please try again later.");
         }
     }
 
