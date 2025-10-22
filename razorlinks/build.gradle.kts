@@ -3,6 +3,7 @@ plugins {
 	id("org.springframework.boot") version "3.5.5"
 	id("io.spring.dependency-management") version "1.1.7"
     id("gg.jte.gradle") version "3.2.1"
+    id("jacoco")
 }
 
 group = "com.razorquake"
@@ -20,6 +21,17 @@ configurations {
 	}
 }
 
+tasks.test {
+    finalizedBy(tasks.jacocoTestReport)
+}
+
+tasks.jacocoTestReport {
+    reports {
+        html.required.set(true)
+        xml.required.set(true)
+    }
+}
+
 repositories {
 	mavenCentral()
 }
@@ -30,6 +42,7 @@ dependencies {
 	annotationProcessor("org.projectlombok:lombok")
 	testImplementation("org.springframework.boot:spring-boot-starter-test")
 	testRuntimeOnly("org.junit.platform:junit-platform-launcher")
+	testRuntimeOnly("com.h2database:h2")
 	implementation("org.springframework.boot:spring-boot-starter-data-jpa")
 	runtimeOnly("com.mysql:mysql-connector-j")
 	runtimeOnly("org.postgresql:postgresql")

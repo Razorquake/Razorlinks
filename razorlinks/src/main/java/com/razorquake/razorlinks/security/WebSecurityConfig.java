@@ -36,17 +36,13 @@ public class WebSecurityConfig  {
     private final AuthEntryPointJwt unauthorizedHandler;
     private final OAuth2LoginSuccessHandler oAuth2LoginSuccessHandler;
     private final UserDetailsServiceImpl userDetailsService;
+    private final JwtAuthenticationFilter jwtAuthenticationFilter;
 
     @Value("${admin.email}")
     private String adminEmail;
 
     @Value("${admin.password}")
     private String adminPassword;
-
-    @Bean
-    public JwtAuthenticationFilter jwtAuthenticationFilter(){
-        return new JwtAuthenticationFilter();
-    }
 
     @Bean
     public AuthenticationManager authenticationManager(AuthenticationConfiguration authenticationConfiguration) throws Exception {
@@ -89,7 +85,7 @@ public class WebSecurityConfig  {
                 })
                 .exceptionHandling(exceptionHandling -> exceptionHandling.authenticationEntryPoint(unauthorizedHandler));
         httpSecurity.authenticationProvider(authenticationProvider());
-        httpSecurity.addFilterBefore(jwtAuthenticationFilter(), UsernamePasswordAuthenticationFilter.class);
+        httpSecurity.addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class);
         return httpSecurity.build();
     }
 

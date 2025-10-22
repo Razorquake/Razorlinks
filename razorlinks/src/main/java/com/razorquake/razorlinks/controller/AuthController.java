@@ -44,9 +44,7 @@ public class AuthController {
     }
 
     @PostMapping("/public/login")
-    public ResponseEntity<?> loginUser(@RequestBody LoginRequest loginRequest){
-
-
+    public ResponseEntity<?> loginUser(@Valid @RequestBody LoginRequest loginRequest){
         return ResponseEntity.ok(userService.authenticateUser(loginRequest));
     }
 
@@ -116,7 +114,12 @@ public class AuthController {
 
     // 2FA Authentication
     @PostMapping("/enable-2fa")
-    public ResponseEntity<String> enable2FA() {
+    public ResponseEntity<?> enable2FA() {
+        // Handle unauthenticated user
+        if (userService.loggedInUser() == null) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
+                    .body(Map.of("message", "User not authenticated", "status", false));
+        }
         Long userId = userService.loggedInUser().getId();
         GoogleAuthenticatorKey secret = userService.generate2FASecret(userId);
         String qrCodeUrl = totpService.getQrCodeUrl(secret,

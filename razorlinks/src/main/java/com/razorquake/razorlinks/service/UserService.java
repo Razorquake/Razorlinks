@@ -152,7 +152,14 @@ public class UserService {
     public void updateUserRole(Long userId, String roleName) {
         User user = userRepository.findById(userId).orElseThrow(()
                 -> new RuntimeException("User not found"));
-        AppRole appRole = AppRole.valueOf(roleName);
+
+        AppRole appRole;
+        try {
+            appRole = AppRole.valueOf(roleName);
+        } catch (IllegalArgumentException e) {
+            throw new RoleNotFoundException("Role not found");
+        }
+
         Role role = roleRepository.findByRoleName(appRole)
                 .orElseThrow(() -> new RoleNotFoundException("Role not found"));
         user.setRole(role);
