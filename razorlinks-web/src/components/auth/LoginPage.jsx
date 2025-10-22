@@ -10,6 +10,7 @@ import Divider from "@mui/material/Divider";
 import {useEmailVerification} from '../../hooks/useEmailVerification.js';
 import {FcGoogle} from "react-icons/fc";
 import {FaGithub} from "react-icons/fa";
+import WebAuthnLogin from "./WebAuthnLogin.jsx";
 
 const LoginPage = () => {
     // Step 1: Login method and Step 2: Verify 2FA
@@ -68,6 +69,12 @@ const LoginPage = () => {
 
         navigate("/dashboard");
     };
+
+    const handleWebAuthnSuccess = ({ token, email }) => {
+        const decodedToken = jwtDecode(token);
+        handleSuccessfulLogin(token, decodedToken);
+    };
+
 
     const loginHandler = async (data) => {
         setLoader(true);
@@ -184,6 +191,12 @@ const LoginPage = () => {
                     className='bg-customRed font-semibold text-white  bg-custom-gradient w-full py-2 hover:text-slate-400 transition-colors duration-100 rounded-sm my-3'>
                     {loader ? 'Loading...' : 'Login'}
                 </button>
+                <button
+                    type="button"
+                    onClick={() => setStep(3)}
+                    className='bg-blue-600 font-semibold text-white w-full py-2 hover:bg-blue-700 transition-colors duration-100 rounded-sm mb-3'>
+                    🔑 Sign in with Passkey
+                </button>
                 <p className=" text-sm text-slate-700 ">
                     <Link
                         className=" underline hover:text-black"
@@ -226,7 +239,7 @@ const LoginPage = () => {
                     </Link>
                 </div>
             </form>
-        </Fragment>) : (<Fragment>
+        </Fragment>) : step === 2 ? (<Fragment>
             <form
                 onSubmit={handleSubmit(onVerify2FaHandler)}
                 className="sm:w-[450px] w-[360px]  shadow-custom py-8 sm:px-8 px-4"
@@ -264,6 +277,15 @@ const LoginPage = () => {
                     {loader ? <span>Loading...</span> : "Verify 2FA"}
                 </button>
             </form>
+        </Fragment>):  (<Fragment>
+            <div className='sm:w-[450px] w-[360px] shadow-custom py-8 sm:px-8 px-4 rounded-md'>
+                <WebAuthnLogin onSuccess={handleWebAuthnSuccess} />
+                <button
+                    onClick={() => setStep(1)}
+                    className='text-blue-600 underline text-sm mt-4 w-full text-center'>
+                    ← Back to password login
+                </button>
+            </div>
         </Fragment>)}
 
     </div>)

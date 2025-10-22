@@ -46,6 +46,7 @@ dependencies {
     implementation("com.google.zxing:javase:3.5.3")
     implementation("gg.jte:jte:3.2.1")
     implementation("gg.jte:jte-spring-boot-starter-3:3.2.1")
+    implementation("com.webauthn4j:webauthn4j-core:0.21.7.RELEASE")
 }
 
 // JTE Configuration

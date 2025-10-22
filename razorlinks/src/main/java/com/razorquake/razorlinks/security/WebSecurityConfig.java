@@ -80,6 +80,14 @@ public class WebSecurityConfig  {
                         .requestMatchers("/api/auth/public/**").permitAll()
                         .requestMatchers("/api/csrf-token").permitAll()
                         .requestMatchers("/oauth2/**").permitAll()
+                        .requestMatchers(
+                                "/api/auth/webauthn/authenticate/**",
+                                "/api/auth/webauthn/has-credentials"
+                        ).permitAll()
+                        .requestMatchers(
+                                "/api/auth/webauthn/register/**",
+                                "/api/auth/webauthn/credentials/**"
+                        ).authenticated()
                         .requestMatchers("/api/urls/**").authenticated()
                         .requestMatchers("/{shortUrl}").permitAll()
                         .anyRequest().authenticated()

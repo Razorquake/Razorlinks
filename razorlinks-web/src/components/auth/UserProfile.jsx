@@ -10,6 +10,7 @@ import {Accordion, AccordionDetails, AccordionSummary, Avatar, Switch} from "@mu
 import TextField from "../TextField.jsx";
 import ArrowDropDownIcon from "@mui/icons-material/ArrowDropDown";
 import Loader from "../Loader.jsx";
+import WebAuthnRegister from "./WebAuthnRegister.jsx";
 
 
 const UserProfile = () => {
@@ -557,6 +558,10 @@ const UserProfile = () => {
                                     </Accordion>
                                 </div>
                             )}
+                        </div>
+                        <div className="flex-1 flex flex-col shadow-lg shadow-gray-300 gap-2 px-4 py-6 mt-4">
+                            <h3 className="text-slate-800 text-xl font-semibold mb-2">Passkeys</h3>
+                            <WebAuthnRegister />
                         </div>
                     </div>
                 </>

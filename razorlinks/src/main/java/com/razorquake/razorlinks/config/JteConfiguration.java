@@ -3,6 +3,7 @@ package com.razorquake.razorlinks.config;
 import gg.jte.ContentType;
 import gg.jte.TemplateEngine;
 import gg.jte.resolve.DirectoryCodeResolver;
+import gg.jte.resolve.ResourceCodeResolver;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -19,8 +20,7 @@ public class JteConfiguration {
     public TemplateEngine templateEngine() {
         // For development - hot reload templates from src/main/jte
         if ("dev".equals(activeProfile) || "local".equals(activeProfile)) {
-            Path templatePath = Path.of("src", "main", "jte");
-            DirectoryCodeResolver codeResolver = new DirectoryCodeResolver(templatePath);
+            ResourceCodeResolver codeResolver = new ResourceCodeResolver("jte");
             return TemplateEngine.create(codeResolver, ContentType.Html);
         }
 
