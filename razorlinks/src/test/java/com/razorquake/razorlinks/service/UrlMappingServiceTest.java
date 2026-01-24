@@ -1,5 +1,6 @@
 package com.razorquake.razorlinks.service;
 
+import com.razorquake.razorlinks.dtos.ClickEventDTO;
 import com.razorquake.razorlinks.dtos.UrlMappingDTO;
 import com.razorquake.razorlinks.models.ClickEvent;
 import com.razorquake.razorlinks.models.UrlMapping;
@@ -14,9 +15,12 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.Collections;
 import java.util.List;
+import java.util.Map;
+import java.util.stream.Collectors;
 
 import static org.assertj.core.api.AssertionsForClassTypes.assertThat;
 import static org.mockito.ArgumentMatchers.any;
@@ -273,6 +277,126 @@ public class UrlMappingServiceTest {    // 🔑 This enables Mockito magic!
 
         System.out.println("✅ Delete was BLOCKED (security works!)");
         System.out.println("✅ Audit log was NOT created (correct!)");
+    }
+
+    /**
+     * TEST 7: Delete URL mapping - not found
+     */
+    @Test
+    void deleteUrlMapping_UrlNotFound_DoesNothing() {
+        // ====== ARRANGE ======
+        when(urlMappingRepository.findByShortUrl("missing"))
+                .thenReturn(null);
+
+        // ====== ACT ======
+        urlMappingService.deleteUrlMapping("missing", testUser);
+
+        // ====== ASSERT ======
+        verify(urlMappingRepository, never()).delete(any(UrlMapping.class));
+        verify(clickEventRepository, never()).deleteAll(any());
+        verify(auditLogService, never()).shortURLDeleted(any(UrlMapping.class));
+    }
+
+    /**
+     * TEST 8: Get click events by date - URL missing
+     */
+    @Test
+    void getClickEventByDate_UrlMissing_ReturnsNull() {
+        // ====== ARRANGE ======
+        when(urlMappingRepository.findByShortUrl("missing"))
+                .thenReturn(null);
+
+        // ====== ACT ======
+        List<ClickEventDTO> result = urlMappingService.getClickEventByDate(
+                "missing",
+                LocalDateTime.now().minusDays(1),
+                LocalDateTime.now()
+        );
+
+        // ====== ASSERT ======
+        assertThat(result).isNull();
+        verify(clickEventRepository, never()).findByUrlMappingAndClickDateBetween(any(), any(), any());
+    }
+
+    /**
+     * TEST 9: Get click events by date - grouped results
+     */
+    @Test
+    void getClickEventByDate_ValidUrl_GroupsByDate() {
+        // ====== ARRANGE ======
+        ClickEvent event1 = new ClickEvent();
+        event1.setUrlMapping(testUrlMapping);
+        event1.setClickDate(LocalDateTime.of(2024, 1, 1, 10, 0));
+
+        ClickEvent event2 = new ClickEvent();
+        event2.setUrlMapping(testUrlMapping);
+        event2.setClickDate(LocalDateTime.of(2024, 1, 1, 12, 0));
+
+        ClickEvent event3 = new ClickEvent();
+        event3.setUrlMapping(testUrlMapping);
+        event3.setClickDate(LocalDateTime.of(2024, 1, 2, 9, 30));
+
+        when(urlMappingRepository.findByShortUrl(testUrlMapping.getShortUrl()))
+                .thenReturn(testUrlMapping);
+        when(clickEventRepository.findByUrlMappingAndClickDateBetween(
+                eq(testUrlMapping),
+                any(LocalDateTime.class),
+                any(LocalDateTime.class))
+        ).thenReturn(List.of(event1, event2, event3));
+
+        // ====== ACT ======
+        List<ClickEventDTO> result = urlMappingService.getClickEventByDate(
+                testUrlMapping.getShortUrl(),
+                LocalDateTime.of(2024, 1, 1, 0, 0),
+                LocalDateTime.of(2024, 1, 3, 0, 0)
+        );
+
+        // ====== ASSERT ======
+        assertThat(result).isNotNull();
+        assertThat(result.size()).isEqualTo(2);
+
+        Map<LocalDate, Long> counts = result.stream()
+                .collect(Collectors.toMap(ClickEventDTO::getClickDate, ClickEventDTO::getCount));
+
+        assertThat(counts.get(LocalDate.of(2024, 1, 1))).isEqualTo(2L);
+        assertThat(counts.get(LocalDate.of(2024, 1, 2))).isEqualTo(1L);
+    }
+
+    /**
+     * TEST 10: Get total clicks by user and date range
+     */
+    @Test
+    void getTotalClicksByUserAndDate_ReturnsCounts() {
+        // ====== ARRANGE ======
+        ClickEvent event1 = new ClickEvent();
+        event1.setUrlMapping(testUrlMapping);
+        event1.setClickDate(LocalDateTime.of(2024, 1, 5, 10, 0));
+
+        ClickEvent event2 = new ClickEvent();
+        event2.setUrlMapping(testUrlMapping);
+        event2.setClickDate(LocalDateTime.of(2024, 1, 5, 12, 0));
+
+        ClickEvent event3 = new ClickEvent();
+        event3.setUrlMapping(testUrlMapping);
+        event3.setClickDate(LocalDateTime.of(2024, 1, 6, 9, 0));
+
+        when(urlMappingRepository.findByUser(testUser)).thenReturn(List.of(testUrlMapping));
+        when(clickEventRepository.findByUrlMappingInAndClickDateBetween(
+                eq(List.of(testUrlMapping)),
+                any(LocalDateTime.class),
+                any(LocalDateTime.class))
+        ).thenReturn(List.of(event1, event2, event3));
+
+        // ====== ACT ======
+        Map<LocalDate, Long> result = urlMappingService.getTotalClicksByUserAndDate(
+                testUser,
+                LocalDate.of(2024, 1, 5),
+                LocalDate.of(2024, 1, 6)
+        );
+
+        // ====== ASSERT ======
+        assertThat(result.get(LocalDate.of(2024, 1, 5))).isEqualTo(2L);
+        assertThat(result.get(LocalDate.of(2024, 1, 6))).isEqualTo(1L);
     }
 }
 

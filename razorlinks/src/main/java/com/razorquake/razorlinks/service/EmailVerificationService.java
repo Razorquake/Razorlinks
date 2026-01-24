@@ -73,7 +73,7 @@ public class EmailVerificationService {
         verificationToken.setVerifiedAt(Instant.now());
         tokenRepository.save(verificationToken);
 
-        // Enable user account
+        // Enable a user account
         User user = verificationToken.getUser();
         user.setEnabled(true);
         User savedUser = userRepository.save(user);

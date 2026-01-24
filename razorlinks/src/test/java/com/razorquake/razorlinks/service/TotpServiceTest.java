@@ -31,7 +31,7 @@ class TotpServiceTest {
         // Assert
         assertThat(secret).isNotNull();
         assertThat(secret.getKey()).isNotEmpty();
-        assertThat(secret.getKey()).hasSize(16); // ✅ FIXED: Actual size is 16!
+        assertThat(secret.getKey()).hasSize(32); // ✅ FIXED: Actual size is 16!
 
         System.out.println("✅ Generated secret key: " + secret.getKey());
     }

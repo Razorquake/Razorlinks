@@ -26,6 +26,7 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.security.crypto.password.PasswordEncoder;
 
@@ -578,5 +579,200 @@ public class UserServiceTest {
         assertThat(savedUser.isTwoFactorEnabled()).isFalse();
 
         System.out.println("✅ 2FA disabled successfully");
+    }
+
+    /**
+     * TEST 19: Update account expiry status
+     */
+    @Test
+    void updateAccountExpiryStatus_ValidUser_UpdatesStatus() {
+        // Arrange
+        Long userId = 1L;
+        boolean expiry = true;
+
+        when(userRepository.findById(userId)).thenReturn(Optional.of(testUser));
+        when(userRepository.save(any(User.class))).thenReturn(testUser);
+
+        // Act
+        userService.updateAccountExpiryStatus(userId, expiry);
+
+        // Assert
+        ArgumentCaptor<User> userCaptor = ArgumentCaptor.forClass(User.class);
+        verify(userRepository).save(userCaptor.capture());
+
+        User savedUser = userCaptor.getValue();
+        assertThat(savedUser.isAccountNonExpired()).isFalse();
+
+        System.out.println("✅ Account expiry status updated");
+    }
+
+    /**
+     * TEST 20: Update account enabled status
+     */
+    @Test
+    void updateAccountEnabledStatus_ValidUser_UpdatesStatus() {
+        // Arrange
+        Long userId = 1L;
+        boolean enabled = false;
+
+        when(userRepository.findById(userId)).thenReturn(Optional.of(testUser));
+        when(userRepository.save(any(User.class))).thenReturn(testUser);
+
+        // Act
+        userService.updateAccountEnabledStatus(userId, enabled);
+
+        // Assert
+        ArgumentCaptor<User> userCaptor = ArgumentCaptor.forClass(User.class);
+        verify(userRepository).save(userCaptor.capture());
+
+        User savedUser = userCaptor.getValue();
+        assertThat(savedUser.isEnabled()).isFalse();
+
+        System.out.println("✅ Account enabled status updated");
+    }
+
+    /**
+     * TEST 21: Update credentials expiry status
+     */
+    @Test
+    void updateCredentialsExpiryStatus_ValidUser_UpdatesStatus() {
+        // Arrange
+        Long userId = 1L;
+        boolean expiry = true;
+
+        when(userRepository.findById(userId)).thenReturn(Optional.of(testUser));
+        when(userRepository.save(any(User.class))).thenReturn(testUser);
+
+        // Act
+        userService.updateCredentialsExpiryStatus(userId, expiry);
+
+        // Assert
+        ArgumentCaptor<User> userCaptor = ArgumentCaptor.forClass(User.class);
+        verify(userRepository).save(userCaptor.capture());
+
+        User savedUser = userCaptor.getValue();
+        assertThat(savedUser.isCredentialsNonExpired()).isFalse();
+
+        System.out.println("✅ Credentials expiry status updated");
+    }
+
+    /**
+     * TEST 22: Update password
+     */
+    @Test
+    void updatePassword_ValidUser_UpdatesPassword() {
+        // Arrange
+        Long userId = 1L;
+        String newPassword = "newPassword123";
+
+        when(userRepository.findById(userId)).thenReturn(Optional.of(testUser));
+        when(passwordEncoder.encode(newPassword)).thenReturn("encoded-new-password");
+
+        // Act
+        userService.updatePassword(userId, newPassword);
+
+        // Assert
+        ArgumentCaptor<User> userCaptor = ArgumentCaptor.forClass(User.class);
+        verify(userRepository).save(userCaptor.capture());
+
+        User savedUser = userCaptor.getValue();
+        assertThat(savedUser.getPassword()).isEqualTo("encoded-new-password");
+
+        System.out.println("✅ Password updated successfully");
+    }
+
+    /**
+     * TEST 23: Get user by ID
+     */
+    @Test
+    void getUserById_UserExists_ReturnsUserDto() {
+        // Arrange
+        when(userRepository.findById(testUser.getId())).thenReturn(Optional.of(testUser));
+
+        // Act
+        UserDTO result = userService.getUserById(testUser.getId());
+
+        // Assert
+        assertThat(result.getUserName()).isEqualTo("testuser");
+        assertThat(result.getEmail()).isEqualTo("test@example.com");
+
+        System.out.println("✅ User retrieved by ID");
+    }
+
+    /**
+     * TEST 24: Get user by ID - not found
+     */
+    @Test
+    void getUserById_UserMissing_ThrowsException() {
+        // Arrange
+        when(userRepository.findById(99L)).thenReturn(Optional.empty());
+
+        // Act & Assert
+        assertThatThrownBy(() -> userService.getUserById(99L))
+                .isInstanceOf(RuntimeException.class)
+                .hasMessageContaining("User not found");
+
+        System.out.println("✅ Missing user throws exception");
+    }
+
+    /**
+     * TEST 25: Get all roles
+     */
+    @Test
+    void getAllRoles_ReturnsRoles() {
+        // Arrange
+        List<Role> roles = List.of(userRole, adminRole);
+        when(roleRepository.findAll()).thenReturn(roles);
+
+        // Act
+        List<Role> result = userService.getAllRoles();
+
+        // Assert
+        assertThat(result).containsExactly(userRole, adminRole);
+
+        System.out.println("✅ Roles retrieved successfully");
+    }
+
+    /**
+     * TEST 26: Logged in user
+     */
+    @Test
+    void loggedInUser_AuthenticationPresent_ReturnsUser() {
+        // Arrange
+        SecurityContextHolder.getContext()
+                .setAuthentication(new UsernamePasswordAuthenticationToken("testuser", "password"));
+        when(userRepository.findByUsername("testuser")).thenReturn(Optional.of(testUser));
+
+        try {
+            // Act
+            User result = userService.loggedInUser();
+
+            // Assert
+            assertThat(result).isEqualTo(testUser);
+            verify(userRepository).findByUsername("testuser");
+
+            System.out.println("✅ Logged in user resolved successfully");
+        } finally {
+            SecurityContextHolder.clearContext();
+        }
+    }
+
+    /**
+     * TEST 27: Update user role - valid name but repository missing
+     */
+    @Test
+    void updateUserRole_ValidRoleMissingInRepository_ThrowsException() {
+        // Arrange
+        Long userId = 1L;
+        when(userRepository.findById(userId)).thenReturn(Optional.of(testUser));
+        when(roleRepository.findByRoleName(AppRole.ROLE_ADMIN)).thenReturn(Optional.empty());
+
+        // Act & Assert
+        assertThatThrownBy(() -> userService.updateUserRole(userId, "ROLE_ADMIN"))
+                .isInstanceOf(RoleNotFoundException.class)
+                .hasMessage("Role not found");
+
+        verify(userRepository, never()).save(any(User.class));
+        System.out.println("✅ Missing role throws exception");
     }
 }
