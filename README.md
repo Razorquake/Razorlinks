@@ -8,9 +8,10 @@
 
 [![Live Demo](https://custom-icon-badges.demolab.com/badge/Live%20Demo-razorlinks.dev-FF9900?logo=aws&logoColor=white)](https://razorlinks.dev)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://github.com/Razorquake/Razorlinks/blob/master/LICENSE)
-[![Java](https://img.shields.io/badge/Java-17-orange?logo=openjdk)](https://www.oracle.com/java/)
+[![Java](https://img.shields.io/badge/Java-21-orange?logo=openjdk)](https://www.oracle.com/java/)
 [![Node.js](https://img.shields.io/badge/Node.js-22.14.0-green?logo=node.js)](https://nodejs.org/)
-[![Spring Boot](https://img.shields.io/badge/Spring%20Boot-3.x-brightgreen?logo=spring-boot)](https://spring.io/projects/spring-boot)
+[![Spring Boot](https://img.shields.io/badge/Spring%20Boot-4.x-green?logo=spring-boot)](https://spring.io/projects/spring-boot)
+[![Spring](https://img.shields.io/badge/Spring-7.x-brightgreen?logo=spring)](https://spring.io/projects/spring)
 [![React](https://img.shields.io/badge/React-18.x-61DAFB?logo=react)](https://reactjs.org/)
 [![Hacktoberfest](https://img.shields.io/badge/Hacktoberfest-Accepted-ff69b4)](https://hacktoberfest.com/)
 [![Deploy Backend to Elastic Beanstalk](https://github.com/Razorquake/Razorlinks/actions/workflows/deploy-backend.yml/badge.svg)](https://github.com/Razorquake/Razorlinks/actions/workflows/deploy-backend.yml)
@@ -61,8 +62,8 @@ Razorlinks simplifies URL shortening for efficient sharing. Easily generate, man
 ### Tech Stack
 
 #### Backend
-- **Language:** Java 17
-- **Framework:** Spring Boot 3.x
+- **Language:** Java 21
+- **Framework:** Spring Boot 4.x
 - **Security:** Spring Security with JWT authentication
 - **Database:** PostgreSQL (via Spring Data JPA)
 - **Task Scheduling:** Spring Scheduling (`@EnableScheduling`)
@@ -126,7 +127,7 @@ Automated deployment pipeline for backend to AWS Elastic Beanstalk:
 - **Build Process:**
   1. Checkout code
   2. Configure AWS credentials via OIDC
-  3. Set up JDK 17
+  3. Set up JDK 21
   4. Build with Gradle (skip tests)
   5. Generate version label with timestamp
   6. Deploy JAR to Elastic Beanstalk
@@ -145,7 +146,7 @@ Automated deployment pipeline for backend to AWS Elastic Beanstalk:
 ## 🛠️ Local Development Setup
 
 ### Prerequisites
-- Java 17 or higher
+- Java 21 or higher
 - Node.js 22.14.0 or higher
 - PostgreSQL database
 - Gradle (or use the included Gradle wrapper)
