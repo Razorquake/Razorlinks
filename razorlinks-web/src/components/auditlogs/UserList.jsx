@@ -4,7 +4,7 @@ import {useEffect, useState} from "react";
 import toast from "react-hot-toast";
 import { DataGrid } from "@mui/x-data-grid";
 import api from "../../services/api.js";
-import moment from "moment";
+import dayjs from "dayjs";
 import {MdDateRange, MdOutlineEmail} from "react-icons/md";
 import Errors from "../Errors.jsx";
 import {Link} from "react-router-dom";
@@ -132,7 +132,7 @@ const UserList = () => {
     }, []);
 
     const rows = users.map((item) => {
-        const formattedDate = moment(item.createdDate).format(
+        const formattedDate = dayjs(item.createdDate).format(
             "MMMM DD, YYYY, hh:mm A"
         );
 

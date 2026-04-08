@@ -44,6 +44,9 @@ class WebSecurityConfigTest {
     @Mock
     private JwtAuthenticationFilter jwtAuthenticationFilter;
 
+    @Mock
+    private RateLimitingFilter rateLimitingFilter;
+
     private WebSecurityConfig webSecurityConfig;
 
     @BeforeEach
@@ -52,7 +55,8 @@ class WebSecurityConfigTest {
                 unauthorizedHandler,
                 oAuth2LoginSuccessHandler,
                 userDetailsService,
-                jwtAuthenticationFilter
+                jwtAuthenticationFilter,
+                rateLimitingFilter
         );
         ReflectionTestUtils.setField(webSecurityConfig, "adminEmail", "admin@example.com");
         ReflectionTestUtils.setField(webSecurityConfig, "adminPassword", "adminpass");

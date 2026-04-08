@@ -37,6 +37,7 @@ public class WebSecurityConfig  {
     private final OAuth2LoginSuccessHandler oAuth2LoginSuccessHandler;
     private final UserDetailsServiceImpl userDetailsService;
     private final JwtAuthenticationFilter jwtAuthenticationFilter;
+    private final RateLimitingFilter rateLimitingFilter;
 
     @Value("${admin.email}")
     private String adminEmail;
@@ -86,6 +87,7 @@ public class WebSecurityConfig  {
                 .exceptionHandling(exceptionHandling -> exceptionHandling.authenticationEntryPoint(unauthorizedHandler));
         httpSecurity.authenticationProvider(authenticationProvider());
         httpSecurity.addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class);
+        httpSecurity.addFilterAfter(rateLimitingFilter, JwtAuthenticationFilter.class);
         return httpSecurity.build();
     }
 

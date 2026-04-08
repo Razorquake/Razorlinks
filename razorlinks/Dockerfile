@@ -1,5 +1,5 @@
-# Use a Java 17 JDK image to build the Spring Boot app
-FROM eclipse-temurin:17-jdk AS build
+# Use a Java 21 JDK image to build the Spring Boot app
+FROM eclipse-temurin:21-jdk AS build
 
 # Set the working directory
 WORKDIR /app
@@ -21,8 +21,8 @@ RUN ./gradlew dependencies --no-daemon
 COPY src ./src
 RUN ./gradlew build --no-daemon -x test
 
-# Use a Java 17 runtime image to run the application
-FROM eclipse-temurin:17-jre
+# Use a Java 21 runtime image to run the application
+FROM eclipse-temurin:21-jre
 
 # Set the working directory
 WORKDIR /app

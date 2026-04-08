@@ -53,6 +53,9 @@ class AuditControllerTest {
     @MockitoBean
     private UserDetailsService userDetailsService;
 
+    @MockitoBean
+    private com.razorquake.razorlinks.config.RateLimitConfig rateLimitConfig;
+
     @Autowired
     private WebApplicationContext context;
 

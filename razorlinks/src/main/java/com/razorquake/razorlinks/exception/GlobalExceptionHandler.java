@@ -75,4 +75,12 @@ public class GlobalExceptionHandler {
         response.put("status", false);
         return new ResponseEntity<>(response, HttpStatus.BAD_REQUEST);
     }
+
+    @ExceptionHandler(RateLimitExceededException.class)
+    public ResponseEntity<Map<String, Object>> handleRateLimitExceeded(RateLimitExceededException e) {
+        Map<String, Object> response = new HashMap<>();
+        response.put("message", e.getMessage());
+        response.put("status", false);
+        return new ResponseEntity<>(response, HttpStatus.TOO_MANY_REQUESTS);
+    }
 }

@@ -1,8 +1,8 @@
 plugins {
 	java
-	id("org.springframework.boot") version "4.0.1"
+	id("org.springframework.boot") version "4.0.5"
 	id("io.spring.dependency-management") version "1.1.7"
-    id("gg.jte.gradle") version "3.2.2"
+    id("gg.jte.gradle") version "3.2.3"
     id("jacoco")
 }
 
@@ -58,8 +58,9 @@ dependencies {
     implementation("com.warrenstrange:googleauth:1.5.0")
     implementation("com.google.zxing:core:3.5.4")
     implementation("com.google.zxing:javase:3.5.4")
-    implementation("gg.jte:jte:3.2.2")
-    implementation("gg.jte:jte-spring-boot-starter-3:3.2.2")
+    implementation("gg.jte:jte:3.2.3")
+    implementation("gg.jte:jte-spring-boot-starter-3:3.2.3")
+    implementation("com.bucket4j:bucket4j_jdk17-core:8.14.0")
 }
 
 // JTE Configuration

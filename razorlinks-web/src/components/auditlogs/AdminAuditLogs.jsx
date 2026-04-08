@@ -4,7 +4,7 @@ import {MdDateRange} from "react-icons/md";
 import {useEffect, useState} from "react";
 import toast from "react-hot-toast";
 import api from "../../services/api.js";
-import moment from "moment";
+import dayjs from "dayjs";
 import {Link} from "react-router-dom";
 import {DataGrid} from "@mui/x-data-grid";
 import Errors from "../Errors.jsx";
@@ -133,9 +133,9 @@ const AdminAuditLogs = () => {
     }, []);
 
     const rows = auditLogs.map((item) => {
-        //format the time bu using moment npm package
+        //format the time bu using dayjs npm package
 
-        const formattedDate = moment(item.timestamp).format(
+        const formattedDate = dayjs(item.timestamp).format(
             "MMMM DD, YYYY, hh:mm A"
         );
 

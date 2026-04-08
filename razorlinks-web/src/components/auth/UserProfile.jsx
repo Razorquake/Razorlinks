@@ -2,9 +2,9 @@ import React, {useEffect, useState} from 'react';
 import {useForm} from "react-hook-form";
 import toast from "react-hot-toast";
 import api from "../../services/api.js";
-import moment from "moment";
 import {useStoreContext} from "../../store/ContextApi.jsx";
 import Errors from "../Errors.jsx";
+import dayjs from "dayjs";
 import {jwtDecode} from "jwt-decode";
 import {Accordion, AccordionDetails, AccordionSummary, Avatar, Switch} from "@mui/material";
 import TextField from "../TextField.jsx";
@@ -167,8 +167,8 @@ const UserProfile = () => {
             setAccountEnabled(currentUser.enabled);
             setCredentialExpired(!currentUser.credentialsNonExpired);
 
-            //moment npm package is used to format the date
-            const expiredFormatDate = moment(
+            //dayjs npm package is used to format the date
+            const expiredFormatDate = dayjs(
                 currentUser?.credentialsExpiryDate
             ).format("D MMMM YYYY");
             setCredentialExpireDate(expiredFormatDate);
@@ -179,7 +179,7 @@ const UserProfile = () => {
         if (token) {
             const decodedToken = jwtDecode(token);
 
-            const lastLoginSession = moment
+            const lastLoginSession = dayjs
                 .unix(decodedToken.iat)
                 .format("dddd, D MMMM YYYY, h:mm A");
             //set the loggin session from the token

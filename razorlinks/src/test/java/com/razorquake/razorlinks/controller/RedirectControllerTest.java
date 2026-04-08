@@ -35,6 +35,9 @@ class RedirectControllerTest {
     @MockitoBean
     private UserDetailsService userDetailsService;
 
+    @MockitoBean
+    private com.razorquake.razorlinks.config.RateLimitConfig rateLimitConfig;
+
     @Test
     void redirect_ShortLinkExists_Returns302WithLocation() throws Exception {
         UrlMapping mapping = new UrlMapping();

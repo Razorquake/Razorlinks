@@ -86,6 +86,9 @@ public class UrlMappingControllerTest {
     @MockitoBean
     private UserDetailsService userDetailsService;
 
+    @MockitoBean
+    private com.razorquake.razorlinks.config.RateLimitConfig rateLimitConfig;
+
     private User testUser;
     private UrlMappingDTO testUrlMapping;
 

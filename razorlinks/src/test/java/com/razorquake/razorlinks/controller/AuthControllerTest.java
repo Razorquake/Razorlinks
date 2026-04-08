@@ -86,6 +86,9 @@ class AuthControllerTest {
     @MockitoBean
     private UserDetailsService userDetailsService;
 
+    @MockitoBean
+    private com.razorquake.razorlinks.config.RateLimitConfig rateLimitConfig;
+
     private RegisterRequest registerRequest;
     private LoginRequest loginRequest;
     private User testUser;
