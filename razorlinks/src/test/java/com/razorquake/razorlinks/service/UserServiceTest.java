@@ -3,6 +3,7 @@ package com.razorquake.razorlinks.service;
 import com.razorquake.razorlinks.dtos.LoginRequest;
 import com.razorquake.razorlinks.dtos.RegisterRequest;
 import com.razorquake.razorlinks.dtos.UserDTO;
+import com.razorquake.razorlinks.dtos.UserFilter;
 import com.razorquake.razorlinks.exception.EmailAlreadyExistsException;
 import com.razorquake.razorlinks.exception.EmailVerificationException;
 import com.razorquake.razorlinks.exception.RoleNotFoundException;
@@ -23,6 +24,12 @@ import org.mockito.ArgumentCaptor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageImpl;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
+import org.springframework.data.jpa.domain.Specification;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
@@ -211,23 +218,19 @@ public class UserServiceTest {
     }
 
     /**
-     * TEST 5: Register user - Admin role requested
+     * TEST 5: Register user - Default USER role assigned
      */
     @Test
-    void registerUser_WithAdminRole_AssignsAdminRole() {
+    void registerUser_AssignsDefaultUserRole() {
         // Arrange
-        Set<String> roles = new HashSet<>();
-        roles.add("admin");
-        registerRequest.setRole(roles);
-
         when(userRepository.existsByUsername(registerRequest.getUsername())).thenReturn(false);
         when(userRepository.existsByEmail(registerRequest.getEmail())).thenReturn(false);
-        when(roleRepository.findByRoleName(AppRole.ROLE_ADMIN)).thenReturn(Optional.of(adminRole));
+        when(roleRepository.findByRoleName(AppRole.ROLE_USER)).thenReturn(Optional.of(userRole));
         when(passwordEncoder.encode(any())).thenReturn("encodedPassword");
         when(userRepository.save(any(User.class))).thenReturn(testUser);
         doNothing().when(emailVerificationService).sendVerificationEmail(any(User.class));
 
-        System.out.println("🎭 Registering user with ADMIN role");
+        System.out.println("🎭 Registering user with default USER role");
 
         // Act
         Map<String, Object> response = userService.registerUser(registerRequest);
@@ -241,9 +244,9 @@ public class UserServiceTest {
         verify(userRepository).save(userCaptor.capture());
 
         User savedUser = userCaptor.getValue();
-        assertThat(savedUser.getRole()).isEqualTo(adminRole);
+        assertThat(savedUser.getRole()).isEqualTo(userRole);
 
-        System.out.println("✅ Admin role assigned correctly");
+        System.out.println("✅ Default USER role assigned correctly");
     }
 
     /**
@@ -346,27 +349,47 @@ public class UserServiceTest {
     }
 
     /**
-     * TEST 10: Get all users
+     * TEST 10: Get all users with pagination and sorting
      */
     @Test
-    void getAllUsers_ReturnsUserDTOList() {
+    void getAllUsers_ReturnsPagedUserDTOs() {
         // Arrange
-        List<User> users = Collections.singletonList(testUser);
-        when(userRepository.findAll()).thenReturn(users);
+        UserFilter filter = new UserFilter();
+        filter.setUsername("test");
+        filter.setPage(1);
+        filter.setSize(25);
+        filter.setSortBy("username");
+        filter.setSortOrder("ASC");
 
-        System.out.println("🎭 Getting all users");
+        Page<User> users = new PageImpl<>(
+                Collections.singletonList(testUser),
+                PageRequest.of(1, 25, Sort.by(Sort.Direction.ASC, "username")),
+                1
+        );
+        when(userRepository.findAll(any(Specification.class), any(Pageable.class))).thenReturn(users);
+
+        System.out.println("🎭 Getting paged users with filter and sorting");
 
         // Act
-        List<UserDTO> result = userService.getAllUsers();
+        Page<UserDTO> result = userService.getAllUsers(filter);
 
         // Assert
-        assertThat(result).hasSize(1);
-        assertThat(result.get(0).getUserName()).isEqualTo("testuser");
-        assertThat(result.get(0).getEmail()).isEqualTo("test@example.com");
+        assertThat(result.getContent()).hasSize(1);
+        assertThat(result.getContent().get(0).getUserName()).isEqualTo("testuser");
+        assertThat(result.getContent().get(0).getEmail()).isEqualTo("test@example.com");
+        assertThat(result.getNumber()).isEqualTo(1);
+        assertThat(result.getSize()).isEqualTo(25);
 
-        System.out.println("✅ All users retrieved successfully");
+        ArgumentCaptor<Pageable> pageableCaptor = ArgumentCaptor.forClass(Pageable.class);
+        verify(userRepository, times(1)).findAll(any(Specification.class), pageableCaptor.capture());
 
-        verify(userRepository, times(1)).findAll();
+        Pageable pageable = pageableCaptor.getValue();
+        assertThat(pageable.getPageNumber()).isEqualTo(1);
+        assertThat(pageable.getPageSize()).isEqualTo(25);
+        assertThat(pageable.getSort().getOrderFor("username")).isNotNull();
+        assertThat(pageable.getSort().getOrderFor("username").getDirection()).isEqualTo(Sort.Direction.ASC);
+
+        System.out.println("✅ Paged users retrieved successfully");
     }
 
     /**

@@ -1,9 +1,16 @@
 package com.razorquake.razorlinks.controller;
 
 import com.razorquake.razorlinks.dtos.UserDTO;
+import com.razorquake.razorlinks.dtos.UserFilter;
 import com.razorquake.razorlinks.models.Role;
 import com.razorquake.razorlinks.service.UserService;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
+import io.swagger.v3.oas.annotations.responses.ApiResponses;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
+import org.springdoc.core.annotations.ParameterObject;
+import org.springframework.data.domain.Page;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -14,14 +21,21 @@ import java.util.List;
 @RestController
 @RequestMapping("/api/admin")
 @PreAuthorize("hasRole('ROLE_ADMIN')")
+@Tag(name = "Administration", description = "Administrative endpoints for managing users, roles, and account status")
 @RequiredArgsConstructor
 public class AdminController {
 
     private final UserService userService;
 
     @GetMapping("/get-users")
-    public ResponseEntity<List<UserDTO>> getAllUsers() {
-        return new ResponseEntity<>(userService.getAllUsers(),
+    @Operation(summary = "Get users", description = "Returns a paginated list of users with optional admin filters.")
+    @ApiResponses({
+            @ApiResponse(responseCode = "200", description = "Users fetched successfully"),
+            @ApiResponse(responseCode = "401", description = "Authentication required"),
+            @ApiResponse(responseCode = "403", description = "Admin role required")
+    })
+    public ResponseEntity<Page<UserDTO>> getAllUsers(@ModelAttribute @ParameterObject UserFilter filter) {
+        return new ResponseEntity<>(userService.getAllUsers(filter),
                 HttpStatus.OK);
     }
 

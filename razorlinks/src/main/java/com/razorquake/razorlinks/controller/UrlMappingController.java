@@ -1,13 +1,17 @@
 package com.razorquake.razorlinks.controller;
 
 import com.google.zxing.WriterException;
+import com.razorquake.razorlinks.dtos.ClickAnalyticsFilter;
 import com.razorquake.razorlinks.dtos.ClickEventDTO;
 import com.razorquake.razorlinks.dtos.UrlMappingDTO;
+import com.razorquake.razorlinks.dtos.UrlMappingFilter;
 import com.razorquake.razorlinks.models.User;
 import com.razorquake.razorlinks.service.QRCodeService;
 import com.razorquake.razorlinks.service.UrlMappingService;
 import com.razorquake.razorlinks.service.UserService;
 import lombok.RequiredArgsConstructor;
+import org.springdoc.core.annotations.ParameterObject;
+import org.springframework.data.domain.Page;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
@@ -17,10 +21,6 @@ import org.springframework.web.bind.annotation.*;
 
 import java.io.IOException;
 import java.security.Principal;
-import java.time.LocalDate;
-import java.time.LocalDateTime;
-import java.time.format.DateTimeFormatter;
-import java.util.List;
 import java.util.Map;
 
 @RestController
@@ -44,38 +44,29 @@ public class UrlMappingController {
     }
 
     @GetMapping("/myurls")
-    public ResponseEntity<List<UrlMappingDTO>> createShortUrl(
-            Principal principal
+    public ResponseEntity<Page<UrlMappingDTO>> getMyUrls(
+            Principal principal,
+            @ModelAttribute @ParameterObject UrlMappingFilter filter
     ){
         User user = userService.findByUsername(principal.getName());
-        return ResponseEntity.ok(urlMappingService.getUrlsByUser(user));
+        return ResponseEntity.ok(urlMappingService.getUrlsByUser(user, filter));
     }
 
     @GetMapping("/analytics/{shortUrl}")
-    public ResponseEntity<List<ClickEventDTO>> getUrlAnalytics(
+    public ResponseEntity<Page<ClickEventDTO>> getUrlAnalytics(
             @PathVariable String shortUrl,
-            @RequestParam String startDate,
-            @RequestParam String endDate
+            @ModelAttribute @ParameterObject ClickAnalyticsFilter filter
     ){
-        DateTimeFormatter formatter = DateTimeFormatter.ISO_LOCAL_DATE_TIME;
-        LocalDateTime start = LocalDateTime.parse(startDate, formatter);
-        LocalDateTime end = LocalDateTime.parse(endDate, formatter);
-        List<ClickEventDTO> clickEventDTOS =  urlMappingService.getClickEventByDate(shortUrl, start, end);
-        return ResponseEntity.ok(clickEventDTOS);
+        return ResponseEntity.ok(urlMappingService.getClickEventByDate(shortUrl, filter));
     }
 
     @GetMapping("/totalClicks")
-    public ResponseEntity<Map<LocalDate, Long>> getTotalClicksByDate(
+    public ResponseEntity<Page<ClickEventDTO>> getTotalClicksByDate(
             Principal principal,
-            @RequestParam String startDate,
-            @RequestParam String endDate
+            @ModelAttribute @ParameterObject ClickAnalyticsFilter filter
     ) {
-        DateTimeFormatter formatter = DateTimeFormatter.ISO_LOCAL_DATE;
         User user = userService.findByUsername(principal.getName());
-        LocalDate start = LocalDate.parse(startDate, formatter);
-        LocalDate end = LocalDate.parse(endDate, formatter);
-        Map<LocalDate, Long> totalClicks =  urlMappingService.getTotalClicksByUserAndDate(user, start, end);
-        return ResponseEntity.ok(totalClicks);
+        return ResponseEntity.ok(urlMappingService.getTotalClicksByUserAndDate(user, filter));
     }
 
     @DeleteMapping("/{shortUrl}")

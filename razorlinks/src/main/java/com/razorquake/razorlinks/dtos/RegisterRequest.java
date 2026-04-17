@@ -17,7 +17,6 @@ public class RegisterRequest {
     @NotBlank
     @Size(max = 50)
     private String email;
-    private Set<String> role;
     @NotBlank
     @Size(min = 6, max = 40)
     private String password;

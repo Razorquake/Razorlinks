@@ -1,8 +1,10 @@
 package com.razorquake.razorlinks.controller;
 
 import com.google.zxing.WriterException;
+import com.razorquake.razorlinks.dtos.ClickAnalyticsFilter;
 import com.razorquake.razorlinks.dtos.ClickEventDTO;
 import com.razorquake.razorlinks.dtos.UrlMappingDTO;
+import com.razorquake.razorlinks.dtos.UrlMappingFilter;
 import com.razorquake.razorlinks.models.User;
 import com.razorquake.razorlinks.security.jwt.JwtUtils;
 import com.razorquake.razorlinks.service.QRCodeService;
@@ -18,6 +20,9 @@ import org.springframework.boot.webmvc.test.autoconfigure.AutoConfigureMockMvc;
 import org.springframework.boot.webmvc.test.autoconfigure.WebMvcTest;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Import;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageImpl;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
@@ -38,8 +43,7 @@ import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.*;
 
-import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.anyString;
+import static org.mockito.ArgumentMatchers.*;
 import static org.mockito.Mockito.*;
 import static org.springframework.security.test.web.servlet.setup.SecurityMockMvcConfigurers.springSecurity;
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.csrf;
@@ -182,10 +186,14 @@ public class UrlMappingControllerTest {
     @WithMockUser(username = "testuser", roles = "USER")
     void getMyUrls_AuthenticatedUser_ReturnsUrlList() throws Exception {
         // Arrange
-        List<UrlMappingDTO> userUrls = Collections.singletonList(testUrlMapping);
+        Page<UrlMappingDTO> userUrls = new PageImpl<>(
+                Collections.singletonList(testUrlMapping),
+                PageRequest.of(0, 10),
+                1
+        );
 
         when(userService.findByUsername("testuser")).thenReturn(testUser);
-        when(urlMappingService.getUrlsByUser(testUser)).thenReturn(userUrls);
+        when(urlMappingService.getUrlsByUser(eq(testUser), any(UrlMappingFilter.class))).thenReturn(userUrls);
 
         System.out.println("🎭 Mocked user URLs retrieval");
 
@@ -195,13 +203,14 @@ public class UrlMappingControllerTest {
                 )
                 .andDo(print())
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$").isArray())
-                .andExpect(jsonPath("$[0].shortUrl").value("abc12345"))
-                .andExpect(jsonPath("$[0].originalUrl").value("https://example.com"));
+                .andExpect(jsonPath("$.content").isArray())
+                .andExpect(jsonPath("$.content[0].shortUrl").value("abc12345"))
+                .andExpect(jsonPath("$.content[0].originalUrl").value("https://example.com"))
+                .andExpect(jsonPath("$.totalElements").value(1));
 
         System.out.println("✅ Retrieved user's URLs successfully");
 
-        verify(urlMappingService, times(1)).getUrlsByUser(testUser);
+        verify(urlMappingService, times(1)).getUrlsByUser(eq(testUser), any(UrlMappingFilter.class));
     }
 
     /**
@@ -223,13 +232,14 @@ public class UrlMappingControllerTest {
         event2.setClickDate(LocalDate.of(2024, 1, 16));
         event2.setCount(3L);
 
-        List<ClickEventDTO> analytics = Arrays.asList(event1, event2);
+        Page<ClickEventDTO> analytics = new PageImpl<>(
+                Arrays.asList(event1, event2),
+                PageRequest.of(0, 10),
+                2
+        );
 
-        when(urlMappingService.getClickEventByDate(
-                eq(shortUrl),
-                any(LocalDateTime.class),
-                any(LocalDateTime.class)
-        )).thenReturn(analytics);
+        when(urlMappingService.getClickEventByDate(eq(shortUrl), any(ClickAnalyticsFilter.class)))
+                .thenReturn(analytics);
 
         System.out.println("🎭 Mocked analytics data");
 
@@ -241,9 +251,10 @@ public class UrlMappingControllerTest {
                 )
                 .andDo(print())
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$").isArray())
-                .andExpect(jsonPath("$[0].count").value(5))
-                .andExpect(jsonPath("$[1].count").value(3));
+                .andExpect(jsonPath("$.content").isArray())
+                .andExpect(jsonPath("$.content[0].count").value(5))
+                .andExpect(jsonPath("$.content[1].count").value(3))
+                .andExpect(jsonPath("$.totalElements").value(2));
 
         System.out.println("✅ Analytics data retrieved successfully");
     }
@@ -258,29 +269,37 @@ public class UrlMappingControllerTest {
         LocalDate start = LocalDate.of(2024, 1, 1);
         LocalDate end = LocalDate.of(2024, 1, 31);
 
-        Map<LocalDate, Long> clickData = new HashMap<>();
-        clickData.put(LocalDate.of(2024, 1, 15), 10L);
-        clickData.put(LocalDate.of(2024, 1, 16), 8L);
+        ClickEventDTO event1 = new ClickEventDTO();
+        event1.setClickDate(LocalDate.of(2024, 1, 15));
+        event1.setCount(10L);
+
+        ClickEventDTO event2 = new ClickEventDTO();
+        event2.setClickDate(LocalDate.of(2024, 1, 16));
+        event2.setCount(8L);
+
+        Page<ClickEventDTO> clickData = new PageImpl<>(
+                List.of(event1, event2),
+                PageRequest.of(0, 10),
+                2
+        );
 
         when(userService.findByUsername("testuser")).thenReturn(testUser);
-        when(urlMappingService.getTotalClicksByUserAndDate(
-                eq(testUser),
-                any(LocalDate.class),
-                any(LocalDate.class)
-        )).thenReturn(clickData);
+        when(urlMappingService.getTotalClicksByUserAndDate(eq(testUser), any(ClickAnalyticsFilter.class)))
+                .thenReturn(clickData);
 
         System.out.println("🎭 Mocked total clicks data");
 
         // Act & Assert
         mockMvc.perform(
                         get("/api/urls/totalClicks")
-                                .param("startDate", start.toString())
-                                .param("endDate", end.toString())
+                                .param("startDate", start.atStartOfDay().toString())
+                                .param("endDate", end.atTime(23, 59, 59).toString())
                 )
                 .andDo(print())
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$['2024-01-15']").value(10))
-                .andExpect(jsonPath("$['2024-01-16']").value(8));
+                .andExpect(jsonPath("$.content[0].count").value(10))
+                .andExpect(jsonPath("$.content[1].count").value(8))
+                .andExpect(jsonPath("$.totalElements").value(2));
 
         System.out.println("✅ Total clicks retrieved successfully");
     }
@@ -429,7 +448,7 @@ public class UrlMappingControllerTest {
 
 /**
  * 🎓 WHAT YOU LEARNED:
- *
+ * <p>
  * 1. ✅ Testing authenticated endpoints with @WithMockUser
  * 2. ✅ Testing path variables (@PathVariable)
  * 3. ✅ Testing query parameters (@RequestParam)
@@ -438,6 +457,6 @@ public class UrlMappingControllerTest {
  * 6. ✅ Testing unauthorized access
  * 7. ✅ Verifying service method calls with verify()
  * 8. ✅ Testing error handling (exceptions)
- *
+ * <p>
  * Great job! 🎉
  */

@@ -1,5 +1,6 @@
 package com.razorquake.razorlinks.controller;
 
+import com.razorquake.razorlinks.dtos.AuditLogFilter;
 import com.razorquake.razorlinks.models.AuditLog;
 import com.razorquake.razorlinks.security.jwt.JwtUtils;
 import com.razorquake.razorlinks.service.AuditLogService;
@@ -13,6 +14,9 @@ import org.springframework.boot.webmvc.test.autoconfigure.AutoConfigureMockMvc;
 import org.springframework.boot.webmvc.test.autoconfigure.WebMvcTest;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Import;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageImpl;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
@@ -30,6 +34,8 @@ import org.springframework.web.context.WebApplicationContext;
 import java.time.LocalDateTime;
 import java.util.List;
 
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.argThat;
 import static org.mockito.Mockito.*;
 import static org.springframework.security.test.web.servlet.setup.SecurityMockMvcConfigurers.springSecurity;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
@@ -70,41 +76,52 @@ class AuditControllerTest {
     @WithMockUser(username = "admin", roles = "ADMIN")
     void getAllAuditLogs_AdminRole_ReturnsLogs() throws Exception {
         AuditLog log = new AuditLog();
+        log.setId(1L);
         log.setAction("SHORT_URL_CREATED");
         log.setUsername("testuser");
         log.setUrlMappingId(1L);
         log.setShortUrl("abc123");
         log.setTimestamp(LocalDateTime.of(2024, 1, 1, 0, 0));
 
-        when(auditLogService.getAllAuditLogs()).thenReturn(List.of(log));
+        Page<AuditLog> logs = new PageImpl<>(List.of(log), PageRequest.of(0, 10), 1);
+        when(auditLogService.getAllAuditLogs(any(AuditLogFilter.class))).thenReturn(logs);
 
         mockMvc.perform(get("/api/audit"))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$[0].action").value("SHORT_URL_CREATED"))
-                .andExpect(jsonPath("$[0].username").value("testuser"))
-                .andExpect(jsonPath("$[0].urlMappingId").value(1));
+                .andExpect(jsonPath("$.content[0].action").value("SHORT_URL_CREATED"))
+                .andExpect(jsonPath("$.content[0].username").value("testuser"))
+                .andExpect(jsonPath("$.content[0].urlMappingId").value(1))
+                .andExpect(jsonPath("$.totalElements").value(1));
 
-        verify(auditLogService).getAllAuditLogs();
+        verify(auditLogService).getAllAuditLogs(argThat(filter ->
+                filter.getPage() == 0
+                        && filter.getSize() == 10
+                        && "timestamp".equals(filter.getSortBy())
+                        && "DESC".equals(filter.getSortOrder())
+        ));
     }
 
     @Test
     @WithMockUser(username = "admin", roles = "ADMIN")
     void getAuditLogsByUrlId_AdminRole_ReturnsLogs() throws Exception {
         AuditLog log = new AuditLog();
+        log.setId(2L);
         log.setAction("SHORT_URL_CLICKED");
         log.setUsername("testuser");
         log.setUrlMappingId(10L);
         log.setShortUrl("abc123");
         log.setTimestamp(LocalDateTime.of(2024, 1, 2, 0, 0));
 
-        when(auditLogService.getAuditLogsByUrlId(10L)).thenReturn(List.of(log));
+        Page<AuditLog> logs = new PageImpl<>(List.of(log), PageRequest.of(0, 10), 1);
+        when(auditLogService.getAuditLogsByUrlId(eq(10L), any(AuditLogFilter.class))).thenReturn(logs);
 
         mockMvc.perform(get("/api/audit/urls/{id}", 10L))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$[0].action").value("SHORT_URL_CLICKED"))
-                .andExpect(jsonPath("$[0].urlMappingId").value(10));
+                .andExpect(jsonPath("$.content[0].action").value("SHORT_URL_CLICKED"))
+                .andExpect(jsonPath("$.content[0].urlMappingId").value(10))
+                .andExpect(jsonPath("$.totalElements").value(1));
 
-        verify(auditLogService).getAuditLogsByUrlId(10L);
+        verify(auditLogService).getAuditLogsByUrlId(eq(10L), any(AuditLogFilter.class));
     }
 
     @Test
@@ -113,7 +130,7 @@ class AuditControllerTest {
         mockMvc.perform(get("/api/audit"))
                 .andExpect(status().isForbidden());
 
-        verify(auditLogService, never()).getAllAuditLogs();
+        verify(auditLogService, never()).getAllAuditLogs(any(AuditLogFilter.class));
     }
 
     @Test

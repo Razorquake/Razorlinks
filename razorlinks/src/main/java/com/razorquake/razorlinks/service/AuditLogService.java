@@ -1,18 +1,30 @@
 package com.razorquake.razorlinks.service;
 
+import com.razorquake.razorlinks.dtos.AuditLogFilter;
 import com.razorquake.razorlinks.models.AuditLog;
 import com.razorquake.razorlinks.models.ClickEvent;
 import com.razorquake.razorlinks.models.UrlMapping;
 import com.razorquake.razorlinks.repository.AuditLogRepository;
+import com.razorquake.razorlinks.repository.specification.AuditLogSpecification;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
-import java.util.List;
+import java.util.Set;
 
 @Service
 @RequiredArgsConstructor
 public class AuditLogService {
+    private static final Set<String> AUDIT_SORT_FIELDS = Set.of(
+            "timestamp",
+            "action",
+            "username",
+            "shortUrl",
+            "urlMappingId"
+    );
 
     private final AuditLogRepository auditLogRepository;
 
@@ -46,11 +58,14 @@ public class AuditLogService {
         auditLogRepository.save(log);
     }
 
-    public List<AuditLog> getAllAuditLogs() {
-        return auditLogRepository.findAll();
+    public Page<AuditLog> getAllAuditLogs(AuditLogFilter filter) {
+        Specification<AuditLog> spec = AuditLogSpecification.buildSpecification(filter);
+        Pageable pageable = PagingUtils.buildPageable(filter, "timestamp", AUDIT_SORT_FIELDS);
+        return auditLogRepository.findAll(spec, pageable);
     }
 
-    public List<AuditLog> getAuditLogsByUrlId(Long id) {
-        return auditLogRepository.findByUrlMappingId(id);
+    public Page<AuditLog> getAuditLogsByUrlId(Long id, AuditLogFilter filter) {
+        filter.setUrlMappingId(id);
+        return getAllAuditLogs(filter);
     }
 }

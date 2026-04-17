@@ -3,18 +3,23 @@ package com.razorquake.razorlinks.service;
 import com.razorquake.razorlinks.dtos.LoginRequest;
 import com.razorquake.razorlinks.dtos.RegisterRequest;
 import com.razorquake.razorlinks.dtos.UserDTO;
+import com.razorquake.razorlinks.dtos.UserFilter;
 import com.razorquake.razorlinks.exception.*;
 import com.razorquake.razorlinks.models.AppRole;
 import com.razorquake.razorlinks.models.Role;
 import com.razorquake.razorlinks.models.User;
 import com.razorquake.razorlinks.repository.RoleRepository;
 import com.razorquake.razorlinks.repository.UserRepository;
+import com.razorquake.razorlinks.repository.specification.UserSpecification;
 import com.razorquake.razorlinks.security.jwt.JwtAuthenticationResponse;
 import com.razorquake.razorlinks.security.jwt.JwtUtils;
 import com.razorquake.razorlinks.security.service.UserDetailsImpl;
 import com.warrenstrange.googleauth.GoogleAuthenticatorKey;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.jpa.domain.Specification;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
@@ -29,6 +34,14 @@ import java.util.*;
 @Service
 @RequiredArgsConstructor
 public class UserService {
+    private static final Set<String> USER_SORT_FIELDS = Set.of(
+            "createdDate",
+            "updatedDate",
+            "username",
+            "email",
+            "enabled"
+    );
+
     private final PasswordEncoder passwordEncoder;
     private final UserRepository userRepository;
     private final AuthenticationManager authenticationManager;
@@ -47,21 +60,22 @@ public class UserService {
         User user = new User();
         user.setUsername(registerRequest.getUsername());
         user.setEmail(registerRequest.getEmail());
-        Set<String> strRoles = registerRequest.getRole();
-        Role role;
-        if (strRoles == null || strRoles.isEmpty()) {
-            role = roleRepository.findByRoleName(AppRole.ROLE_USER)
-                    .orElseThrow(() -> new RoleNotFoundException("Error: Role is not found."));
-        } else {
-            String roleStr = strRoles.iterator().next();
-            if (roleStr.equals("admin")) {
-                role = roleRepository.findByRoleName(AppRole.ROLE_ADMIN)
-                        .orElseThrow(() -> new RoleNotFoundException("Error: Role is not found."));
-            } else {
-                role = roleRepository.findByRoleName(AppRole.ROLE_USER)
-                        .orElseThrow(() -> new RoleNotFoundException("Error: Role is not found."));
-            }
-        }
+//        Role role;
+//        if (strRoles == null || strRoles.isEmpty()) {
+//            role = roleRepository.findByRoleName(AppRole.ROLE_USER)
+//                    .orElseThrow(() -> new RoleNotFoundException("Error: Role is not found."));
+//        } else {
+//            String roleStr = strRoles.iterator().next();
+//            if (roleStr.equals("admin")) {
+//                role = roleRepository.findByRoleName(AppRole.ROLE_ADMIN)
+//                        .orElseThrow(() -> new RoleNotFoundException("Error: Role is not found."));
+//            } else {
+//                role = roleRepository.findByRoleName(AppRole.ROLE_USER)
+//                        .orElseThrow(() -> new RoleNotFoundException("Error: Role is not found."));
+//            }
+//        }
+        Role role = roleRepository.findByRoleName(AppRole.ROLE_USER)
+                .orElseThrow(() -> new RoleNotFoundException("Error: Role is not found."));
         user.setRole(role);
         user.setPassword(passwordEncoder.encode(registerRequest.getPassword()));
         user.setSignUpMethod("email");
@@ -115,11 +129,10 @@ public class UserService {
         );
     }
 
-    public List<UserDTO> getAllUsers() {
-        return userRepository.findAll()
-                .stream()
-                .map(this::convertToDto)
-                .toList();
+    public Page<UserDTO> getAllUsers(UserFilter filter) {
+        Specification<User> spec = UserSpecification.buildSpecification(filter);
+        Pageable pageable = PagingUtils.buildPageable(filter, "createdDate", USER_SORT_FIELDS);
+        return userRepository.findAll(spec, pageable).map(this::convertToDto);
     }
 
     public User loggedInUser() {

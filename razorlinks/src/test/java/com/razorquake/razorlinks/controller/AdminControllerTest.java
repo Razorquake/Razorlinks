@@ -1,6 +1,7 @@
 package com.razorquake.razorlinks.controller;
 
 import com.razorquake.razorlinks.dtos.UserDTO;
+import com.razorquake.razorlinks.dtos.UserFilter;
 import com.razorquake.razorlinks.models.AppRole;
 import com.razorquake.razorlinks.models.Role;
 import com.razorquake.razorlinks.service.UserService;
@@ -11,6 +12,9 @@ import org.mockito.quality.Strictness;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.webmvc.test.autoconfigure.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageImpl;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.security.test.context.support.WithMockUser;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
@@ -111,11 +115,15 @@ class AdminControllerTest {
     @WithMockUser(username = "admin", roles = "ADMIN")
     void getAllUsers_AdminRole_ReturnsUserList() throws Exception {
         // Arrange
-        List<UserDTO> users = Collections.singletonList(testUserDTO);
+        Page<UserDTO> users = new PageImpl<>(
+                Collections.singletonList(testUserDTO),
+                PageRequest.of(0, 10),
+                1
+        );
 
-        when(userService.getAllUsers()).thenReturn(users);
+        when(userService.getAllUsers(any(UserFilter.class))).thenReturn(users);
 
-        System.out.println("🎭 Mocked getAllUsers() with 1 user");
+        System.out.println("🎭 Mocked paged getAllUsers(filter) with 1 user");
 
         // Act & Assert
         mockMvc.perform(
@@ -123,13 +131,21 @@ class AdminControllerTest {
                 )
                 .andDo(print())
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$").isArray())
-                .andExpect(jsonPath("$[0].userName").value("testuser"))
-                .andExpect(jsonPath("$[0].email").value("test@example.com"));
+                .andExpect(jsonPath("$.content").isArray())
+                .andExpect(jsonPath("$.content[0].userName").value("testuser"))
+                .andExpect(jsonPath("$.content[0].email").value("test@example.com"))
+                .andExpect(jsonPath("$.number").value(0))
+                .andExpect(jsonPath("$.size").value(10))
+                .andExpect(jsonPath("$.totalElements").value(1));
 
         System.out.println("✅ Admin retrieved all users successfully");
 
-        verify(userService, times(1)).getAllUsers();
+        verify(userService, times(1)).getAllUsers(argThat(filter ->
+                filter.getPage() == 0
+                        && filter.getSize() == 10
+                        && "createdDate".equals(filter.getSortBy())
+                        && "DESC".equals(filter.getSortOrder())
+        ));
     }
 
     /**
@@ -151,7 +167,7 @@ class AdminControllerTest {
         System.out.println("✅ Regular user correctly denied access");
 
         // Verify service was NEVER called
-        verify(userService, never()).getAllUsers();
+        verify(userService, never()).getAllUsers(any(UserFilter.class));
     }
 
     /**
@@ -171,7 +187,7 @@ class AdminControllerTest {
 
         System.out.println("✅ Unauthenticated user correctly denied");
 
-        verify(userService, never()).getAllUsers();
+        verify(userService, never()).getAllUsers(any(UserFilter.class));
     }
 
     /**

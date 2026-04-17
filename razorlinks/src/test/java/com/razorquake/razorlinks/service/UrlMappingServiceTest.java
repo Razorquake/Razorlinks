@@ -1,7 +1,9 @@
 package com.razorquake.razorlinks.service;
 
+import com.razorquake.razorlinks.dtos.ClickAnalyticsFilter;
 import com.razorquake.razorlinks.dtos.ClickEventDTO;
 import com.razorquake.razorlinks.dtos.UrlMappingDTO;
+import com.razorquake.razorlinks.dtos.UrlMappingFilter;
 import com.razorquake.razorlinks.models.ClickEvent;
 import com.razorquake.razorlinks.models.UrlMapping;
 import com.razorquake.razorlinks.models.User;
@@ -14,6 +16,12 @@ import org.mockito.ArgumentCaptor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageImpl;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
+import org.springframework.data.jpa.domain.Specification;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
@@ -200,26 +208,36 @@ public class UrlMappingServiceTest {    // 🔑 This enables Mockito magic!
      * TEST 4: Getting URLs by user
      */
     @Test
-    void getUrlsByUser_ReturnsUserUrls() {
+    void getUrlsByUser_ReturnsPagedUserUrls() {
         // ====== ARRANGE ======
-        List<UrlMapping> urlMappings = Collections.singletonList(testUrlMapping);
+        UrlMappingFilter filter = new UrlMappingFilter();
+        filter.setPage(1);
+        filter.setSize(5);
+        filter.setSortBy("shortUrl");
+        filter.setSortOrder("ASC");
 
-        when(urlMappingRepository.findByUser(testUser))
+        Page<UrlMapping> urlMappings = new PageImpl<>(
+                Collections.singletonList(testUrlMapping),
+                PageRequest.of(1, 5, Sort.by(Sort.Direction.ASC, "shortUrl")),
+                1
+        );
+        when(urlMappingRepository.findAll(any(Specification.class), any(Pageable.class)))
                 .thenReturn(urlMappings);
 
-        System.out.println("🎭 Mocked repository to return " + urlMappings.size() + " URLs");
+        System.out.println("🎭 Mocked repository to return 1 URL page");
 
         // ====== ACT ======
-        List<UrlMappingDTO> result = urlMappingService.getUrlsByUser(testUser);
+        Page<UrlMappingDTO> result = urlMappingService.getUrlsByUser(testUser, filter);
 
         // ====== ASSERT ======
-        assertThat(result.size()).isEqualTo(1);
-        assertThat(result.get(0).getShortUrl()).isEqualTo("abc12345");
-        assertThat(result.get(0).getOriginalUrl()).isEqualTo("https://example.com");
+        assertThat(result.getContent().size()).isEqualTo(1);
+        assertThat(result.getContent().get(0).getShortUrl()).isEqualTo("abc12345");
+        assertThat(result.getContent().get(0).getOriginalUrl()).isEqualTo("https://example.com");
+        assertThat(result.getNumber()).isEqualTo(1);
 
-        System.out.println("✅ Got " + result.size() + " URLs for user: " + testUser.getUsername());
+        System.out.println("✅ Got " + result.getContent().size() + " URLs for user: " + testUser.getUsername());
 
-        verify(urlMappingRepository, times(1)).findByUser(testUser);
+        verify(urlMappingRepository, times(1)).findAll(any(Specification.class), any(Pageable.class));
     }
 
     /**
@@ -305,16 +323,13 @@ public class UrlMappingServiceTest {    // 🔑 This enables Mockito magic!
         // ====== ARRANGE ======
         when(urlMappingRepository.findByShortUrl("missing"))
                 .thenReturn(null);
+        ClickAnalyticsFilter filter = new ClickAnalyticsFilter();
 
         // ====== ACT ======
-        List<ClickEventDTO> result = urlMappingService.getClickEventByDate(
-                "missing",
-                LocalDateTime.now().minusDays(1),
-                LocalDateTime.now()
-        );
+        Page<ClickEventDTO> result = urlMappingService.getClickEventByDate("missing", filter);
 
         // ====== ASSERT ======
-        assertThat(result).isNull();
+        assertThat(result.getContent().isEmpty()).isTrue();
         verify(clickEventRepository, never()).findByUrlMappingAndClickDateBetween(any(), any(), any());
     }
 
@@ -324,6 +339,12 @@ public class UrlMappingServiceTest {    // 🔑 This enables Mockito magic!
     @Test
     void getClickEventByDate_ValidUrl_GroupsByDate() {
         // ====== ARRANGE ======
+        ClickAnalyticsFilter filter = new ClickAnalyticsFilter();
+        filter.setStartDate(LocalDateTime.of(2024, 1, 1, 0, 0));
+        filter.setEndDate(LocalDateTime.of(2024, 1, 3, 0, 0));
+        filter.setSortBy("clickDate");
+        filter.setSortOrder("ASC");
+
         ClickEvent event1 = new ClickEvent();
         event1.setUrlMapping(testUrlMapping);
         event1.setClickDate(LocalDateTime.of(2024, 1, 1, 10, 0));
@@ -345,17 +366,13 @@ public class UrlMappingServiceTest {    // 🔑 This enables Mockito magic!
         ).thenReturn(List.of(event1, event2, event3));
 
         // ====== ACT ======
-        List<ClickEventDTO> result = urlMappingService.getClickEventByDate(
-                testUrlMapping.getShortUrl(),
-                LocalDateTime.of(2024, 1, 1, 0, 0),
-                LocalDateTime.of(2024, 1, 3, 0, 0)
-        );
+        Page<ClickEventDTO> result = urlMappingService.getClickEventByDate(testUrlMapping.getShortUrl(), filter);
 
         // ====== ASSERT ======
         assertThat(result).isNotNull();
-        assertThat(result.size()).isEqualTo(2);
+        assertThat(result.getContent().size()).isEqualTo(2);
 
-        Map<LocalDate, Long> counts = result.stream()
+        Map<LocalDate, Long> counts = result.getContent().stream()
                 .collect(Collectors.toMap(ClickEventDTO::getClickDate, ClickEventDTO::getCount));
 
         assertThat(counts.get(LocalDate.of(2024, 1, 1))).isEqualTo(2L);
@@ -366,8 +383,12 @@ public class UrlMappingServiceTest {    // 🔑 This enables Mockito magic!
      * TEST 10: Get total clicks by user and date range
      */
     @Test
-    void getTotalClicksByUserAndDate_ReturnsCounts() {
+    void getTotalClicksByUserAndDate_ReturnsPagedCounts() {
         // ====== ARRANGE ======
+        ClickAnalyticsFilter filter = new ClickAnalyticsFilter();
+        filter.setStartDate(LocalDateTime.of(2024, 1, 5, 0, 0));
+        filter.setEndDate(LocalDateTime.of(2024, 1, 6, 23, 59, 59));
+
         ClickEvent event1 = new ClickEvent();
         event1.setUrlMapping(testUrlMapping);
         event1.setClickDate(LocalDateTime.of(2024, 1, 5, 10, 0));
@@ -388,15 +409,14 @@ public class UrlMappingServiceTest {    // 🔑 This enables Mockito magic!
         ).thenReturn(List.of(event1, event2, event3));
 
         // ====== ACT ======
-        Map<LocalDate, Long> result = urlMappingService.getTotalClicksByUserAndDate(
-                testUser,
-                LocalDate.of(2024, 1, 5),
-                LocalDate.of(2024, 1, 6)
-        );
+        Page<ClickEventDTO> result = urlMappingService.getTotalClicksByUserAndDate(testUser, filter);
 
         // ====== ASSERT ======
-        assertThat(result.get(LocalDate.of(2024, 1, 5))).isEqualTo(2L);
-        assertThat(result.get(LocalDate.of(2024, 1, 6))).isEqualTo(1L);
+        Map<LocalDate, Long> counts = result.getContent().stream()
+                .collect(Collectors.toMap(ClickEventDTO::getClickDate, ClickEventDTO::getCount));
+
+        assertThat(counts.get(LocalDate.of(2024, 1, 5))).isEqualTo(2L);
+        assertThat(counts.get(LocalDate.of(2024, 1, 6))).isEqualTo(1L);
     }
 }
 
