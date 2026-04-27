@@ -75,6 +75,8 @@ public class WebSecurityConfig  {
                 .authorizeHttpRequests(auth-> auth
                         .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
                         .requestMatchers("/api/auth/public/**").permitAll()
+                        .requestMatchers("/api/swagger-ui/**").permitAll()
+                        .requestMatchers("/api/api-docs/**").permitAll()
                         .requestMatchers("/api/csrf-token").permitAll()
                         .requestMatchers("/oauth2/**").permitAll()
                         .requestMatchers("/api/urls/**").authenticated()

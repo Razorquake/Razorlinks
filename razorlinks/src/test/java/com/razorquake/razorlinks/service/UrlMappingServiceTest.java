@@ -1,9 +1,6 @@
 package com.razorquake.razorlinks.service;
 
-import com.razorquake.razorlinks.dtos.ClickAnalyticsFilter;
-import com.razorquake.razorlinks.dtos.ClickEventDTO;
-import com.razorquake.razorlinks.dtos.UrlMappingDTO;
-import com.razorquake.razorlinks.dtos.UrlMappingFilter;
+import com.razorquake.razorlinks.dtos.*;
 import com.razorquake.razorlinks.models.ClickEvent;
 import com.razorquake.razorlinks.models.UrlMapping;
 import com.razorquake.razorlinks.models.User;
@@ -12,7 +9,6 @@ import com.razorquake.razorlinks.repository.UrlMappingRepository;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
-import org.mockito.ArgumentCaptor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
@@ -66,6 +62,9 @@ public class UrlMappingServiceTest {    // 🔑 This enables Mockito magic!
     private ClickEventRepository clickEventRepository;
 
     @Mock
+    private UrlRedirectLookupService urlRedirectLookupService;
+
+    @Mock
     private AuditLogService auditLogService;
 
     /**
@@ -78,6 +77,7 @@ public class UrlMappingServiceTest {    // 🔑 This enables Mockito magic!
     // Test data we'll reuse
     private User testUser;
     private UrlMapping testUrlMapping;
+    private UrlRedirectCache testUrlRedirectCache;
 
     @BeforeEach
     void setUp() {
@@ -94,6 +94,13 @@ public class UrlMappingServiceTest {    // 🔑 This enables Mockito magic!
         testUrlMapping.setUser(testUser);
         testUrlMapping.setCreatedDate(LocalDateTime.now());
         testUrlMapping.setClickCount(0);
+
+        testUrlRedirectCache = new UrlRedirectCache(
+                testUrlMapping.getId(),
+                testUrlMapping.getShortUrl(),
+                testUrlMapping.getOriginalUrl(),
+                testUser.getUsername()
+        );
 
         System.out.println("\n🎭 === NEW TEST STARTING ===");
     }
@@ -143,35 +150,43 @@ public class UrlMappingServiceTest {    // 🔑 This enables Mockito magic!
         String shortUrl = "abc12345";
 
         // 🎭 MOCK: Tell repository what to return
-        when(urlMappingRepository.findByShortUrl(shortUrl))
-                .thenReturn(testUrlMapping);
-        when(urlMappingRepository.save(any(UrlMapping.class)))
-                .thenReturn(testUrlMapping);
         when(clickEventRepository.save(any(ClickEvent.class)))
                 .thenReturn(new ClickEvent());
+        when(urlRedirectLookupService.resolve(shortUrl))
+                .thenReturn(testUrlRedirectCache);
+        when(urlMappingRepository.getReferenceById(testUrlMapping.getId()))
+                        .thenReturn(testUrlMapping);
+
+
 
         System.out.println("🎭 Initial click count: " + testUrlMapping.getClickCount());
 
         // ====== ACT ======
-        UrlMapping result = urlMappingService.getOriginalUrl(shortUrl);
+        String result = urlMappingService.getOriginalUrl(shortUrl);
 
         // ====== ASSERT ======
         assertThat(result).isNotNull();
-        assertThat(result.getOriginalUrl()).isEqualTo("https://example.com");
+        assertThat(result).isEqualTo("https://example.com");
 
         // 🎯 IMPORTANT: Check the click count was incremented!
         // We use ArgumentCaptor to "capture" what was passed to save()
-        ArgumentCaptor<UrlMapping> urlMappingCaptor = ArgumentCaptor.forClass(UrlMapping.class);
-        verify(urlMappingRepository).save(urlMappingCaptor.capture());
+        verify(urlMappingRepository).incrementClickCount(testUrlMapping.getId());
+        verify(urlMappingRepository).getReferenceById(testUrlMapping.getId());
 
-        UrlMapping savedMapping = urlMappingCaptor.getValue();
-        assertThat(savedMapping.getClickCount()).isEqualTo(1);
-
-        System.out.println("✅ Click count after redirect: " + savedMapping.getClickCount());
+        System.out.println("✅ Click count after redirect: " + testUrlMapping.getClickCount());
 
         // Verify a click event was created
         verify(clickEventRepository, times(1)).save(any(ClickEvent.class));
         System.out.println("✅ Click event was created");
+
+        // Verify audit Log
+        verify(auditLogService).shortURLClicked(
+                eq(testUrlMapping.getId()),
+                eq(testUrlMapping.getShortUrl()),
+                eq(testUser.getUsername()),
+                any(LocalDateTime.class)
+        );
+        System.out.println("✅ Audit log for click was created");
     }
 
     /**
@@ -184,13 +199,13 @@ public class UrlMappingServiceTest {    // 🔑 This enables Mockito magic!
         String invalidShortUrl = "invalid123";
 
         // 🎭 MOCK: Tell repository to return null (URL not found)
-        when(urlMappingRepository.findByShortUrl(invalidShortUrl))
+        when(urlRedirectLookupService.resolve(invalidShortUrl))
                 .thenReturn(null);
 
         System.out.println("🎭 Mocked repository to return null for: " + invalidShortUrl);
 
         // ====== ACT ======
-        UrlMapping result = urlMappingService.getOriginalUrl(invalidShortUrl);
+        String result = urlMappingService.getOriginalUrl(invalidShortUrl);
 
         // ====== ASSERT ======
         assertThat(result).isNull();
@@ -198,7 +213,7 @@ public class UrlMappingServiceTest {    // 🔑 This enables Mockito magic!
         System.out.println("✅ Result is null (expected)");
 
         // 🔍 VERIFY: Save should NEVER be called if URL wasn't found
-        verify(urlMappingRepository, never()).save(any(UrlMapping.class));
+        verify(urlMappingRepository, never()).incrementClickCount(any(Long.class));
         verify(clickEventRepository, never()).save(any(ClickEvent.class));
 
         System.out.println("✅ Verified save() was NEVER called (correct!)");
@@ -231,8 +246,8 @@ public class UrlMappingServiceTest {    // 🔑 This enables Mockito magic!
 
         // ====== ASSERT ======
         assertThat(result.getContent().size()).isEqualTo(1);
-        assertThat(result.getContent().get(0).getShortUrl()).isEqualTo("abc12345");
-        assertThat(result.getContent().get(0).getOriginalUrl()).isEqualTo("https://example.com");
+        assertThat(result.getContent().getFirst().getShortUrl()).isEqualTo("abc12345");
+        assertThat(result.getContent().getFirst().getOriginalUrl()).isEqualTo("https://example.com");
         assertThat(result.getNumber()).isEqualTo(1);
 
         System.out.println("✅ Got " + result.getContent().size() + " URLs for user: " + testUser.getUsername());

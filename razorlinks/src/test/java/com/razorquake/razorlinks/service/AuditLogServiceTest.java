@@ -2,7 +2,6 @@ package com.razorquake.razorlinks.service;
 
 import com.razorquake.razorlinks.dtos.AuditLogFilter;
 import com.razorquake.razorlinks.models.AuditLog;
-import com.razorquake.razorlinks.models.ClickEvent;
 import com.razorquake.razorlinks.models.UrlMapping;
 import com.razorquake.razorlinks.models.User;
 import com.razorquake.razorlinks.repository.AuditLogRepository;
@@ -83,11 +82,12 @@ class AuditLogServiceTest {
 
     @Test
     void shortURLClicked_CreatesAuditLog() {
-        ClickEvent clickEvent = new ClickEvent();
-        clickEvent.setUrlMapping(urlMapping);
-        clickEvent.setClickDate(LocalDateTime.of(2024, 1, 5, 12, 30));
-
-        auditLogService.shortURLClicked(clickEvent);
+        auditLogService.shortURLClicked(
+                urlMapping.getId(),
+                urlMapping.getShortUrl(),
+                user.getUsername(),
+                LocalDateTime.of(2024, 1, 5, 12, 30)
+        );
 
         ArgumentCaptor<AuditLog> logCaptor = ArgumentCaptor.forClass(AuditLog.class);
         verify(auditLogRepository).save(logCaptor.capture());
@@ -97,7 +97,7 @@ class AuditLogServiceTest {
         assertThat(log.getUsername()).isEqualTo("testuser");
         assertThat(log.getUrlMappingId()).isEqualTo(10L);
         assertThat(log.getShortUrl()).isEqualTo("abc123");
-        assertThat(log.getTimestamp()).isEqualTo(clickEvent.getClickDate());
+        assertThat(log.getTimestamp()).isEqualTo(LocalDateTime.of(2024, 1, 5, 12, 30));
     }
 
     @Test

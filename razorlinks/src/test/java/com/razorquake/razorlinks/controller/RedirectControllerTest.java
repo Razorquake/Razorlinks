@@ -44,7 +44,7 @@ class RedirectControllerTest {
         mapping.setShortUrl("abc123");
         mapping.setOriginalUrl("https://example.com");
 
-        when(urlMappingService.getOriginalUrl("abc123")).thenReturn(mapping);
+        when(urlMappingService.getOriginalUrl("abc123")).thenReturn("https://example.com");
 
         mockMvc.perform(get("/abc123"))
                 .andExpect(status().isFound())

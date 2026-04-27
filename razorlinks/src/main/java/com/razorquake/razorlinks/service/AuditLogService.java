@@ -2,7 +2,6 @@ package com.razorquake.razorlinks.service;
 
 import com.razorquake.razorlinks.dtos.AuditLogFilter;
 import com.razorquake.razorlinks.models.AuditLog;
-import com.razorquake.razorlinks.models.ClickEvent;
 import com.razorquake.razorlinks.models.UrlMapping;
 import com.razorquake.razorlinks.repository.AuditLogRepository;
 import com.razorquake.razorlinks.repository.specification.AuditLogSpecification;
@@ -48,16 +47,6 @@ public class AuditLogService {
         auditLogRepository.save(log);
     }
 
-    public void shortURLClicked(ClickEvent clickEvent) {
-        AuditLog log = new AuditLog();
-        log.setAction("SHORT_URL_CLICKED");
-        log.setUsername(clickEvent.getUrlMapping().getUser().getUsername());
-        log.setUrlMappingId(clickEvent.getUrlMapping().getId());
-        log.setShortUrl(clickEvent.getUrlMapping().getShortUrl());
-        log.setTimestamp(clickEvent.getClickDate());
-        auditLogRepository.save(log);
-    }
-
     public Page<AuditLog> getAllAuditLogs(AuditLogFilter filter) {
         Specification<AuditLog> spec = AuditLogSpecification.buildSpecification(filter);
         Pageable pageable = PagingUtils.buildPageable(filter, "timestamp", AUDIT_SORT_FIELDS);
@@ -67,5 +56,15 @@ public class AuditLogService {
     public Page<AuditLog> getAuditLogsByUrlId(Long id, AuditLogFilter filter) {
         filter.setUrlMappingId(id);
         return getAllAuditLogs(filter);
+    }
+
+    public void shortURLClicked(Long id, String shortUrl, String username, LocalDateTime clickDate) {
+        AuditLog log = new AuditLog();
+        log.setAction("SHORT_URL_CLICKED");
+        log.setUsername(username);
+        log.setUrlMappingId(id);
+        log.setShortUrl(shortUrl);
+        log.setTimestamp(clickDate);
+        auditLogRepository.save(log);
     }
 }

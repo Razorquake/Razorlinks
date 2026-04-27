@@ -1,16 +1,15 @@
 package com.razorquake.razorlinks.service;
 
-import com.razorquake.razorlinks.dtos.ClickAnalyticsFilter;
-import com.razorquake.razorlinks.dtos.ClickEventDTO;
-import com.razorquake.razorlinks.dtos.UrlMappingDTO;
-import com.razorquake.razorlinks.dtos.UrlMappingFilter;
+import com.razorquake.razorlinks.dtos.*;
 import com.razorquake.razorlinks.models.ClickEvent;
 import com.razorquake.razorlinks.models.UrlMapping;
 import com.razorquake.razorlinks.models.User;
 import com.razorquake.razorlinks.repository.ClickEventRepository;
 import com.razorquake.razorlinks.repository.UrlMappingRepository;
 import com.razorquake.razorlinks.repository.specification.UrlMappingSpecification;
+import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
+import org.springframework.cache.annotation.CacheEvict;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.domain.Specification;
@@ -20,7 +19,6 @@ import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.Comparator;
 import java.util.List;
-import java.util.Map;
 import java.util.Random;
 import java.util.Set;
 import java.util.stream.Collectors;
@@ -36,11 +34,12 @@ public class UrlMappingService {
     );
     private static final Set<String> ANALYTICS_SORT_FIELDS = Set.of("clickDate", "count");
 
+    private final UrlRedirectLookupService urlRedirectLookupService;
     private final UrlMappingRepository urlMappingRepository;
     private final ClickEventRepository clickEventRepository;
     private final AuditLogService auditLogService;
 
-
+    @CacheEvict(cacheNames = "redirects", key = "#shortUrl")
     public void deleteUrlMapping(String shortUrl, User user) {
         UrlMapping urlMapping = urlMappingRepository.findByShortUrl(shortUrl);
         if (urlMapping != null && urlMapping.getUser().getId().equals(user.getId())) {
@@ -114,17 +113,28 @@ public class UrlMappingService {
         return buildAnalyticsPage(clickEvents, filter, pageable);
     }
 
-    public UrlMapping getOriginalUrl(String shortLink) {
-        UrlMapping urlMapping = urlMappingRepository.findByShortUrl(shortLink);
-        if (urlMapping != null){
-            urlMapping.setClickCount(urlMapping.getClickCount()+1);
-            urlMappingRepository.save(urlMapping);
-            ClickEvent clickEvent = new ClickEvent();
-            clickEvent.setClickDate(LocalDateTime.now());
-            clickEvent.setUrlMapping(urlMapping);
-            auditLogService.shortURLClicked(clickEventRepository.save(clickEvent));
+    @Transactional
+    public String getOriginalUrl(String shortLink) {
+        UrlRedirectCache redirect = urlRedirectLookupService.resolve(shortLink);
+
+        if (redirect == null) {
+            return null;
         }
-        return urlMapping;
+
+        urlMappingRepository.incrementClickCount(redirect.id());
+
+        ClickEvent clickEvent = new ClickEvent();
+        clickEvent.setClickDate(LocalDateTime.now());
+        clickEvent.setUrlMapping(urlMappingRepository.getReferenceById(redirect.id()));
+        clickEventRepository.save(clickEvent);
+        auditLogService.shortURLClicked(
+                redirect.id(),
+                redirect.shortUrl(),
+                redirect.username(),
+                clickEvent.getClickDate()
+        );
+
+        return redirect.originalUrl();
     }
 
     private List<ClickEvent> resolveClickEventsByDate(UrlMapping urlMapping, LocalDateTime start, LocalDateTime end) {
