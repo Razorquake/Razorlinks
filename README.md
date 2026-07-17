@@ -24,7 +24,12 @@
 
 Razorlinks simplifies URL shortening for efficient sharing. Easily generate, manage, and track your shortened links with our intuitive interface and comprehensive analytics dashboard. With features like QR code generation and click tracking, Razorlinks streamlines the process of sharing and monitoring your links.
 
-🔴 **Live Application:** [https://razorlinks.dev](https://razorlinks.dev)
+> ## Deployment Status
+> ⚠️ This project is currently **not deployed**.
+>
+> The previous AWS deployment was discontinued after the free tier expired, so the app is currently available for **local development/use only**.
+>
+> If you want to deploy it on AWS yourself, please follow the guide in [`AWS.md`](./AWS.md).
 
 ---
 
